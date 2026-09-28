@@ -6,9 +6,10 @@
  * OpenAPI spec version: 0.0.0
  */
 import type { PutUsersById200Image } from './putUsersById200Image';
-import type { PutUsersById200Portal } from './putUsersById200Portal';
-import type { PutUsersById200RoleId } from './putUsersById200RoleId';
-import type { PutUsersById200Role } from './putUsersById200Role';
+import type { PutUsersById200UserRoleId } from './putUsersById200UserRoleId';
+import type { PutUsersById200UserRole } from './putUsersById200UserRole';
+import type { PutUsersById200AdminRoleId } from './putUsersById200AdminRoleId';
+import type { PutUsersById200AdminRole } from './putUsersById200AdminRole';
 import type { PutUsersById200CreatedAt } from './putUsersById200CreatedAt';
 import type { PutUsersById200UpdatedAt } from './putUsersById200UpdatedAt';
 
@@ -20,12 +21,17 @@ export type PutUsersById200 = {
   name: string;
   /** @nullable */
   image: PutUsersById200Image;
-  portal: PutUsersById200Portal;
   isGuest: boolean;
+  isUser: boolean;
   /** @nullable */
-  roleId: PutUsersById200RoleId;
+  userRoleId: PutUsersById200UserRoleId;
   /** @nullable */
-  role: PutUsersById200Role;
+  userRole: PutUsersById200UserRole;
+  isAdmin: boolean;
+  /** @nullable */
+  adminRoleId: PutUsersById200AdminRoleId;
+  /** @nullable */
+  adminRole: PutUsersById200AdminRole;
   createdAt: PutUsersById200CreatedAt;
   updatedAt: PutUsersById200UpdatedAt;
 };

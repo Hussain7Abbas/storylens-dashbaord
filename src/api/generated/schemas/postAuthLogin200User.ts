@@ -13,8 +13,10 @@ export type PostAuthLogin200User = {
   email: string;
   username: string;
   name: string;
-  portal: PostAuthLogin200UserPortal;
   isGuest: boolean;
+  isUser: boolean;
+  isAdmin: boolean;
+  portal: PostAuthLogin200UserPortal;
   /** @nullable */
   role: PostAuthLogin200UserRole;
   permissions: string[];

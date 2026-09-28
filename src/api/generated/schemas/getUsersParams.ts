@@ -5,7 +5,7 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
-import type { GetUsersPortal } from './getUsersPortal';
+import type { GetUsersAccess } from './getUsersAccess';
 
 export type GetUsersParams = {
 /**
@@ -21,7 +21,7 @@ pageSize?: string | number;
  * @maxLength 200
  */
 search?: string;
-portal?: GetUsersPortal;
+access?: GetUsersAccess;
 roleId?: string;
 guests?: boolean | string;
 };

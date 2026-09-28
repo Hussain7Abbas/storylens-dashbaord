@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { LogOut, Pencil, Plus, Trash2 } from "lucide-react";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { errorMessage } from "@/api/axios-instance";
 import { useGetRoles } from "@/api/generated/endpoints/admin-roles";
 import {
@@ -38,10 +38,101 @@ type Role = GetRoles200DataItem;
 type Portal = "admin" | "user";
 
 const PAGE_SIZE = 20;
-const PORTAL_LABEL: Record<Portal, string> = {
-	admin: "Dashboard",
-	user: "Reader",
+
+const ACCESS: Record<
+	Portal,
+	{
+		label: string;
+		hint: string;
+		flag: "isUser" | "isAdmin";
+		roleKey: "userRoleId" | "adminRoleId";
+	}
+> = {
+	user: {
+		label: "Reader access",
+		hint: "Signs in to the extension, website account pages and desktop client.",
+		flag: "isUser",
+		roleKey: "userRoleId",
+	},
+	admin: {
+		label: "Dashboard access",
+		hint: "Signs in to this dashboard.",
+		flag: "isAdmin",
+		roleKey: "adminRoleId",
+	},
 };
+
+type AccessValues = {
+	isUser: boolean;
+	userRoleId: string;
+	isAdmin: boolean;
+	adminRoleId: string;
+};
+
+/** One portal's checkbox and role picker in the user form. */
+function AccessSection({
+	portal,
+	values,
+	roles,
+	locked,
+	onChange,
+}: {
+	portal: Portal;
+	values: AccessValues;
+	roles: Role[];
+	locked: boolean;
+	onChange: (next: Partial<AccessValues>) => void;
+}) {
+	const { label, hint, flag, roleKey } = ACCESS[portal];
+	const options = roles.filter((role) => role.portal === portal);
+	const enabled = values[flag];
+	return (
+		<fieldset className="rounded-[var(--control-radius)] border border-line p-4">
+			<legend className="sr-only">{label}</legend>
+			<label className="flex items-start gap-3">
+				<input
+					type="checkbox"
+					className="mt-1 size-4 shrink-0 accent-[var(--accent)]"
+					checked={enabled}
+					disabled={locked}
+					onChange={(event) =>
+						onChange({
+							[flag]: event.target.checked,
+							// Pick the first role of this portal when access is switched on.
+							...(event.target.checked && !values[roleKey]
+								? { [roleKey]: options[0]?.id ?? "" }
+								: {}),
+						})
+					}
+				/>
+				<span>
+					<span className="block text-sm font-semibold">{label}</span>
+					<span className="block text-xs text-muted">{hint}</span>
+				</span>
+			</label>
+			{enabled && (
+				<Field label="Role" className="mt-3">
+					<select
+						className="input"
+						required
+						value={values[roleKey]}
+						disabled={locked}
+						onChange={(event) => onChange({ [roleKey]: event.target.value })}
+					>
+						{options.length === 0 && (
+							<option value="">No roles for this portal</option>
+						)}
+						{options.map((role) => (
+							<option key={role.id} value={role.id}>
+								{role.name}
+							</option>
+						))}
+					</select>
+				</Field>
+			)}
+		</fieldset>
+	);
+}
 
 function UserForm({
 	user,
@@ -56,26 +147,22 @@ function UserForm({
 	const toast = useToast();
 	const me = useCurrentUser();
 	const isSelf = user?.id === me.id;
-	const [portal, setPortal] = useState<Portal>(user?.portal ?? "admin");
 	const [values, setValues] = useState({
 		name: user?.name ?? "",
 		username: user?.username ?? "",
 		email: user?.email ?? "",
 		password: "",
-		roleId: user?.roleId ?? "",
+	});
+	const [access, setAccess] = useState<AccessValues>({
+		isUser: user?.isUser ?? false,
+		userRoleId: user?.userRoleId ?? "",
+		isAdmin: user?.isAdmin ?? true,
+		adminRoleId:
+			user?.adminRoleId ??
+			roles.find((role) => role.portal === "admin")?.id ??
+			"",
 	});
 	const [error, setError] = useState("");
-
-	const portalRoles = roles.filter((role) => role.portal === portal);
-	useEffect(() => {
-		// Keep the chosen role valid for the chosen portal.
-		setValues((current) => {
-			const options = roles.filter((role) => role.portal === portal);
-			if (options.some((role) => role.id === current.roleId)) return current;
-			const roleId = options[0]?.id ?? "";
-			return roleId === current.roleId ? current : { ...current, roleId };
-		});
-	}, [roles, portal]);
 
 	const onSuccess = async () => {
 		await queryClient.invalidateQueries({ queryKey: getGetUsersQueryKey() });
@@ -90,12 +177,36 @@ function UserForm({
 	const set = (key: keyof typeof values) => (value: string) =>
 		setValues((current) => ({ ...current, [key]: value }));
 
+	const hasAccess = access.isUser || access.isAdmin;
+	const rolesChosen =
+		(!access.isUser || access.userRoleId) &&
+		(!access.isAdmin || access.adminRoleId);
+
+	const accessBody = {
+		isUser: access.isUser,
+		userRoleId: access.isUser ? access.userRoleId : null,
+		// You can't change your own dashboard access; the API refuses it too.
+		...(isSelf
+			? {}
+			: {
+					isAdmin: access.isAdmin,
+					adminRoleId: access.isAdmin ? access.adminRoleId : null,
+				}),
+	};
+
 	const submit = (event: FormEvent) => {
 		event.preventDefault();
 		setError("");
 		if (!user) {
 			create.mutate({
-				data: { ...values, email: values.email.trim(), portal },
+				data: {
+					...values,
+					email: values.email.trim(),
+					isUser: access.isUser,
+					userRoleId: access.isUser ? access.userRoleId : null,
+					isAdmin: access.isAdmin,
+					adminRoleId: access.isAdmin ? access.adminRoleId : null,
+				},
 			});
 			return;
 		}
@@ -106,7 +217,7 @@ function UserForm({
 				username: values.username,
 				email: values.email.trim(),
 				...(values.password ? { password: values.password } : {}),
-				...(isSelf ? {} : { portal, roleId: values.roleId }),
+				...accessBody,
 			},
 		});
 	};
@@ -151,8 +262,8 @@ function UserForm({
 				label={user ? "New password" : "Password"}
 				hint={
 					user
-						? "Leave blank to keep the current password. Changing it signs the user out."
-						: "At least 8 characters."
+						? "Leave blank to keep the current password. It is shared by both kinds of access; changing it signs the user out everywhere."
+						: "At least 8 characters. Used for both kinds of access."
 				}
 				className="sm:col-span-2"
 			>
@@ -167,42 +278,32 @@ function UserForm({
 					onChange={(e) => set("password")(e.target.value)}
 				/>
 			</Field>
-			<Field
-				label="Portal"
-				hint={
-					isSelf
-						? "You can’t change your own portal or role."
-						: "Dashboard users sign in here; readers use the extension."
-				}
-			>
-				<select
-					className="input"
-					value={portal}
-					disabled={isSelf}
-					onChange={(e) => setPortal(e.target.value as Portal)}
-				>
-					<option value="admin">Dashboard</option>
-					<option value="user">Reader</option>
-				</select>
-			</Field>
-			<Field label="Role">
-				<select
-					className="input"
-					required
-					value={values.roleId}
-					disabled={isSelf}
-					onChange={(e) => set("roleId")(e.target.value)}
-				>
-					{portalRoles.length === 0 && (
-						<option value="">No roles for this portal</option>
-					)}
-					{portalRoles.map((role) => (
-						<option key={role.id} value={role.id}>
-							{role.name}
-						</option>
-					))}
-				</select>
-			</Field>
+			<div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+				<AccessSection
+					portal="user"
+					values={access}
+					roles={roles}
+					locked={false}
+					onChange={(next) => setAccess((current) => ({ ...current, ...next }))}
+				/>
+				<AccessSection
+					portal="admin"
+					values={access}
+					roles={roles}
+					locked={isSelf}
+					onChange={(next) => setAccess((current) => ({ ...current, ...next }))}
+				/>
+			</div>
+			{isSelf && (
+				<p className="field-hint sm:col-span-2">
+					You can’t change your own dashboard access or role.
+				</p>
+			)}
+			{!hasAccess && (
+				<p className="field-error sm:col-span-2">
+					Choose reader access, dashboard access, or both.
+				</p>
+			)}
 			{error && (
 				<p className="field-error sm:col-span-2" role="alert">
 					{error}
@@ -216,7 +317,7 @@ function UserForm({
 					type="submit"
 					variant="primary"
 					loading={busy}
-					disabled={!values.roleId}
+					disabled={!hasAccess || !rolesChosen}
 				>
 					{user ? "Save changes" : "Create user"}
 				</Button>
@@ -234,7 +335,7 @@ export function UsersPage() {
 	const queryClient = useQueryClient();
 	const { values, page, set } = useSearchState([
 		"search",
-		"portal",
+		"access",
 		"roleId",
 	] as const);
 	const [editing, setEditing] = useState<User | "new" | null>(null);
@@ -245,7 +346,7 @@ export function UsersPage() {
 		page,
 		pageSize: PAGE_SIZE,
 		search: values.search || undefined,
-		portal: (values.portal || undefined) as Portal | undefined,
+		access: (values.access || undefined) as Portal | undefined,
 		roleId: values.roleId || undefined,
 	};
 	const users = useGetUsers(params, {
@@ -288,7 +389,7 @@ export function UsersPage() {
 		<>
 			<PageHeader
 				title="Users"
-				description="Dashboard accounts are created here only. Readers register from the extension or website."
+				description="One account can have reader access, dashboard access, or both. Dashboard access is granted here only; readers register from the extension or website."
 				actions={
 					can(PERMISSIONS.users.create) &&
 					can(PERMISSIONS.roles.list) && (
@@ -313,13 +414,13 @@ export function UsersPage() {
 					/>
 					<select
 						className="input w-auto"
-						aria-label="Filter by portal"
-						value={values.portal}
-						onChange={(e) => set({ portal: e.target.value, roleId: "" })}
+						aria-label="Filter by access"
+						value={values.access}
+						onChange={(e) => set({ access: e.target.value, roleId: "" })}
 					>
-						<option value="">All portals</option>
-						<option value="admin">Dashboard</option>
-						<option value="user">Reader</option>
+						<option value="">All access</option>
+						<option value="admin">Dashboard access</option>
+						<option value="user">Reader access</option>
 					</select>
 					{roleList.length > 0 && (
 						<select
@@ -331,7 +432,7 @@ export function UsersPage() {
 							<option value="">All roles</option>
 							{roleList
 								.filter(
-									(role) => !values.portal || role.portal === values.portal,
+									(role) => !values.access || role.portal === values.access,
 								)
 								.map((role) => (
 									<option key={role.id} value={role.id}>
@@ -360,8 +461,7 @@ export function UsersPage() {
 								<thead>
 									<tr>
 										<th scope="col">User</th>
-										<th scope="col">Portal</th>
-										<th scope="col">Role</th>
+										<th scope="col">Access</th>
 										<th scope="col">Joined</th>
 										<th scope="col">
 											<span className="sr-only">Actions</span>
@@ -386,18 +486,18 @@ export function UsersPage() {
 												</p>
 											</td>
 											<td>
-												<span
-													className={`badge ${user.portal === "admin" ? "badge-accent" : ""}`}
-												>
-													{PORTAL_LABEL[user.portal]}
-												</span>
-											</td>
-											<td>
-												{user.role ? (
-													<span className="text-sm">{user.role.name}</span>
-												) : (
-													<span className="badge badge-warning">No role</span>
-												)}
+												<ul className="flex flex-wrap gap-1.5">
+													{user.isAdmin && (
+														<li className="badge badge-accent">
+															Dashboard · {user.adminRole?.name ?? "no role"}
+														</li>
+													)}
+													{user.isUser && (
+														<li className="badge">
+															Reader · {user.userRole?.name ?? "no role"}
+														</li>
+													)}
+												</ul>
 											</td>
 											<td className="whitespace-nowrap text-muted">
 												{formatDate(user.createdAt)}
@@ -481,7 +581,7 @@ export function UsersPage() {
 				title={editing === "new" ? "New user" : "Edit user"}
 				description={
 					editing === "new"
-						? "Create a dashboard account, or a verified reader account."
+						? "Create a verified account with dashboard access, reader access, or both."
 						: undefined
 				}
 			>

@@ -70,7 +70,7 @@ for (const theme of ["light", "dark"] as const) {
 	});
 }
 
-test("creating a dashboard user sends the chosen portal and role", async ({
+test("one new user can get both reader and dashboard access", async ({
 	page,
 }) => {
 	const requests = await mockApi(page, { signedIn: true });
@@ -81,7 +81,11 @@ test("creating a dashboard user sends the chosen portal and role", async ({
 	await dialog.getByLabel("Username").fill("rowan");
 	await dialog.getByLabel("Email").fill("rowan@example.com");
 	await dialog.getByLabel("Password").fill("a-strong-password");
-	await expect(dialog.getByLabel("Role")).toHaveValue("role-super");
+	const dashboard = dialog.getByRole("group", { name: "Dashboard access" });
+	await expect(dashboard.getByLabel("Role")).toHaveValue("role-super");
+	const reader = dialog.getByRole("group", { name: "Reader access" });
+	await reader.getByRole("checkbox").check();
+	await expect(reader.getByLabel("Role")).toHaveValue("role-reader");
 	await dialog.getByRole("button", { name: "Create user" }).click();
 	await expect(
 		page.getByRole("status").filter({ hasText: "User created" }),
@@ -91,10 +95,19 @@ test("creating a dashboard user sends the chosen portal and role", async ({
 			request.method === "POST" && request.path === "/api/admin/users/",
 	);
 	expect(created?.body).toMatchObject({
-		portal: "admin",
-		roleId: "role-super",
+		isUser: true,
+		userRoleId: "role-reader",
+		isAdmin: true,
+		adminRoleId: "role-super",
 		username: "rowan",
 	});
+});
+
+test("the list shows each account's access and roles", async ({ page }) => {
+	await mockApi(page, { signedIn: true });
+	await page.goto("/users");
+	await expect(page.getByText("Dashboard · Super Admin")).toBeVisible();
+	await expect(page.getByText("Reader · Reader")).toBeVisible();
 });
 
 test("pages and actions follow the role's permissions", async ({ page }) => {

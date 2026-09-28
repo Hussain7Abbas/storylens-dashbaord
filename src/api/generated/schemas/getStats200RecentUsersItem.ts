@@ -5,14 +5,14 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
-import type { GetStats200RecentUsersItemPortal } from './getStats200RecentUsersItemPortal';
 import type { GetStats200RecentUsersItemCreatedAt } from './getStats200RecentUsersItemCreatedAt';
 
 export type GetStats200RecentUsersItem = {
   id: string;
   username: string;
   email: string;
-  portal: GetStats200RecentUsersItemPortal;
+  isUser: boolean;
+  isAdmin: boolean;
   isGuest: boolean;
   createdAt: GetStats200RecentUsersItemCreatedAt;
 };

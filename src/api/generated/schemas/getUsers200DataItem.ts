@@ -6,9 +6,10 @@
  * OpenAPI spec version: 0.0.0
  */
 import type { GetUsers200DataItemImage } from './getUsers200DataItemImage';
-import type { GetUsers200DataItemPortal } from './getUsers200DataItemPortal';
-import type { GetUsers200DataItemRoleId } from './getUsers200DataItemRoleId';
-import type { GetUsers200DataItemRole } from './getUsers200DataItemRole';
+import type { GetUsers200DataItemUserRoleId } from './getUsers200DataItemUserRoleId';
+import type { GetUsers200DataItemUserRole } from './getUsers200DataItemUserRole';
+import type { GetUsers200DataItemAdminRoleId } from './getUsers200DataItemAdminRoleId';
+import type { GetUsers200DataItemAdminRole } from './getUsers200DataItemAdminRole';
 import type { GetUsers200DataItemCreatedAt } from './getUsers200DataItemCreatedAt';
 import type { GetUsers200DataItemUpdatedAt } from './getUsers200DataItemUpdatedAt';
 
@@ -20,12 +21,17 @@ export type GetUsers200DataItem = {
   name: string;
   /** @nullable */
   image: GetUsers200DataItemImage;
-  portal: GetUsers200DataItemPortal;
   isGuest: boolean;
+  isUser: boolean;
   /** @nullable */
-  roleId: GetUsers200DataItemRoleId;
+  userRoleId: GetUsers200DataItemUserRoleId;
   /** @nullable */
-  role: GetUsers200DataItemRole;
+  userRole: GetUsers200DataItemUserRole;
+  isAdmin: boolean;
+  /** @nullable */
+  adminRoleId: GetUsers200DataItemAdminRoleId;
+  /** @nullable */
+  adminRole: GetUsers200DataItemAdminRole;
   createdAt: GetUsers200DataItemCreatedAt;
   updatedAt: GetUsers200DataItemUpdatedAt;
 };

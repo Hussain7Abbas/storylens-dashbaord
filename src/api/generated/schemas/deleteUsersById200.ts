@@ -6,9 +6,10 @@
  * OpenAPI spec version: 0.0.0
  */
 import type { DeleteUsersById200Image } from './deleteUsersById200Image';
-import type { DeleteUsersById200Portal } from './deleteUsersById200Portal';
-import type { DeleteUsersById200RoleId } from './deleteUsersById200RoleId';
-import type { DeleteUsersById200Role } from './deleteUsersById200Role';
+import type { DeleteUsersById200UserRoleId } from './deleteUsersById200UserRoleId';
+import type { DeleteUsersById200UserRole } from './deleteUsersById200UserRole';
+import type { DeleteUsersById200AdminRoleId } from './deleteUsersById200AdminRoleId';
+import type { DeleteUsersById200AdminRole } from './deleteUsersById200AdminRole';
 import type { DeleteUsersById200CreatedAt } from './deleteUsersById200CreatedAt';
 import type { DeleteUsersById200UpdatedAt } from './deleteUsersById200UpdatedAt';
 
@@ -20,12 +21,17 @@ export type DeleteUsersById200 = {
   name: string;
   /** @nullable */
   image: DeleteUsersById200Image;
-  portal: DeleteUsersById200Portal;
   isGuest: boolean;
+  isUser: boolean;
   /** @nullable */
-  roleId: DeleteUsersById200RoleId;
+  userRoleId: DeleteUsersById200UserRoleId;
   /** @nullable */
-  role: DeleteUsersById200Role;
+  userRole: DeleteUsersById200UserRole;
+  isAdmin: boolean;
+  /** @nullable */
+  adminRoleId: DeleteUsersById200AdminRoleId;
+  /** @nullable */
+  adminRole: DeleteUsersById200AdminRole;
   createdAt: DeleteUsersById200CreatedAt;
   updatedAt: DeleteUsersById200UpdatedAt;
 };

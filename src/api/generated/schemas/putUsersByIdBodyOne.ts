@@ -5,7 +5,8 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
-import type { PutUsersByIdBodyOnePortal } from './putUsersByIdBodyOnePortal';
+import type { PutUsersByIdBodyOneUserRoleId } from './putUsersByIdBodyOneUserRoleId';
+import type { PutUsersByIdBodyOneAdminRoleId } from './putUsersByIdBodyOneAdminRoleId';
 
 export type PutUsersByIdBodyOne = {
   email?: string;
@@ -24,6 +25,10 @@ export type PutUsersByIdBodyOne = {
    * @maxLength 72
    */
   password?: string;
-  portal?: PutUsersByIdBodyOnePortal;
-  roleId?: string;
+  isUser?: boolean;
+  /** @nullable */
+  userRoleId?: PutUsersByIdBodyOneUserRoleId;
+  isAdmin?: boolean;
+  /** @nullable */
+  adminRoleId?: PutUsersByIdBodyOneAdminRoleId;
 };

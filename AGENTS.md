@@ -6,15 +6,15 @@ Standalone public repository, also pinned in the Story Lens umbrella at `apps/da
 
 - Vite + React 19 single-page app, React Router, TanStack Query and Axios; Tailwind v4 with the Ink & Iris tokens in `src/styles/globals.css`. Nginx serves the static `dist/` build; there is no Node server in production.
 - `src/api/generated/` is the Orval client for the dashboard API only (`Admin: …` tags, `/api/admin`). Never edit it; regenerate with `make orval` against a running local backend (`ORVAL_API_URL`, default `http://localhost:3030`; the spec is off in production) and commit the output. `orval.config.ts` drops the `ApiAdmin` prefix from operation names (`getUsersById`). `src/api/axios-instance.ts` is the mutator: it adds the bearer token and signs out on 401.
-- `src/lib/session.ts` keeps the session token in `localStorage` (`storylens-dashbaord-token`); `src/lib/auth.tsx` loads `/api/admin/auth/me` and exposes `can(permission)`. `src/lib/permissions.ts` lists the dashboard permission keys (`METHOD /api/admin/...`), which must match the backend routes.
+- `src/lib/session.ts` keeps the session token in `localStorage` (`storylens-dashboard-token`); `src/lib/auth.tsx` loads `/api/admin/auth/me` and exposes `can(permission)`. `src/lib/permissions.ts` lists the dashboard permission keys (`METHOD /api/admin/...`), which must match the backend routes.
 - `src/components/ui/` holds shared controls (buttons, fields, native dialogs, confirm dialogs, toasts, pagination, page states); `src/components/layout/app-shell.tsx` is the sidebar layout; `src/pages/` has one file per screen.
 - Use strict TypeScript, named exports, no `any`, and no lint-suppression comments.
 
 ## Access rules
 
-- The dashboard has sign-in only. Never add registration: dashboard accounts (portal `admin`) are created from the Users page (`POST /api/admin/users`) or by the backend seed (one super admin). Readers register from the extension and website.
+- The dashboard has sign-in only. Never add registration: dashboard access (`isAdmin` + a dashboard role) is granted from the Users page (`POST`/`PUT /api/admin/users`) or by the backend seed. One account can have reader access (`isUser` + a reader role), dashboard access, or both, with one email, username and password; readers register from the extension and website.
 - The API enforces every permission. The UI only hides pages and actions: guard routes with `Allow` in `src/app.tsx` and actions with `can(PERMISSIONS…)`, and show `Forbidden` rather than an empty page. When a backend admin route is added or renamed, update `src/lib/permissions.ts`, the generated client and the relevant page.
-- A user can't change their own portal or role, delete themselves or remove the last super admin; the API refuses these and the UI does not offer them. The `super-admin` role always holds every admin permission and its list is read-only.
+- A user can't change their own dashboard access or role, delete themselves or remove the last super admin; the API refuses these and the UI does not offer them. The `super-admin` role always holds every admin permission and its list is read-only.
 
 ## Design
 

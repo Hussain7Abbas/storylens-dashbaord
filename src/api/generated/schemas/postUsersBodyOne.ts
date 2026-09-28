@@ -5,7 +5,8 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
-import type { PostUsersBodyOnePortal } from './postUsersBodyOnePortal';
+import type { PostUsersBodyOneUserRoleId } from './postUsersBodyOneUserRoleId';
+import type { PostUsersBodyOneAdminRoleId } from './postUsersBodyOneAdminRoleId';
 
 export type PostUsersBodyOne = {
   email: string;
@@ -24,6 +25,10 @@ export type PostUsersBodyOne = {
    * @maxLength 72
    */
   password: string;
-  portal: PostUsersBodyOnePortal;
-  roleId: string;
+  isUser: boolean;
+  /** @nullable */
+  userRoleId?: PostUsersBodyOneUserRoleId;
+  isAdmin: boolean;
+  /** @nullable */
+  adminRoleId?: PostUsersBodyOneAdminRoleId;
 };

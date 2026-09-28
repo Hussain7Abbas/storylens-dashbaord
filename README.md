@@ -8,9 +8,9 @@ Admin dashboard for [Story Lens](https://storylens.iscoded.com): manage dashboar
 
 ## Access model
 
-Every account has a **portal**: `admin` accounts sign in here; `user` accounts (readers) use the extension, website and desktop client. Each account has one **role**, and a role is a list of **permissions**. The backend creates one permission per API endpoint (`GET /api/admin/users/`, `POST /api/user/keywords/`, …) plus the `user:moderate` capability, and syncs them from its routes on startup. The seeded **Super Admin** role always holds every dashboard permission.
+One account (one email, username and password) can have **reader access** (`isUser`: the extension, website and desktop client) and/or **dashboard access** (`isAdmin`: this dashboard), with a **role** for each. A role is a list of **permissions**. Sign-in tokens are issued per API, so a reader token never opens the dashboard. The backend creates one permission per API endpoint (`GET /api/admin/users/`, `POST /api/user/keywords/`, …) plus the `user:moderate` capability, and syncs them from its routes on startup. The seeded **Super Admin** role always holds every dashboard permission.
 
-The dashboard has no sign-up. The backend seed creates the first super admin from `DASHBOARD_ADMIN_EMAIL`, `DASHBOARD_ADMIN_USERNAME` and `DASHBOARD_ADMIN_PASSWORD` (`make seed-dashboard-admin` in the backend); other dashboard users are created on the Users page.
+The dashboard has no sign-up. The backend seed gives `DASHBOARD_ADMIN_EMAIL` super-admin dashboard access (`make seed-dashboard-admin` in the backend): an existing reader account with that email keeps its password and reader access; otherwise a dashboard-only account is created from `DASHBOARD_ADMIN_USERNAME` and `DASHBOARD_ADMIN_PASSWORD`. Everyone else gets dashboard access on the Users page.
 
 ## Development
 

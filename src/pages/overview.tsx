@@ -152,11 +152,10 @@ export function OverviewPage() {
 												</p>
 											</div>
 											<div className="flex shrink-0 items-center gap-2">
-												<span
-													className={`badge ${user.portal === "admin" ? "badge-accent" : ""}`}
-												>
-													{user.portal === "admin" ? "Dashboard" : "Reader"}
-												</span>
+												{user.isAdmin && (
+													<span className="badge badge-accent">Dashboard</span>
+												)}
+												{user.isUser && <span className="badge">Reader</span>}
 												<span className="text-xs text-muted">
 													{formatDate(user.createdAt)}
 												</span>

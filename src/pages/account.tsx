@@ -149,7 +149,10 @@ function PasswordForm() {
 					onChange={(event) => setCurrentPassword(event.target.value)}
 				/>
 			</Field>
-			<Field label="New password" hint="At least 8 characters.">
+			<Field
+				label="New password"
+				hint="At least 8 characters. If your account also has reader access, this is your extension password too. Other sessions are signed out."
+			>
 				<input
 					className="input"
 					type="password"

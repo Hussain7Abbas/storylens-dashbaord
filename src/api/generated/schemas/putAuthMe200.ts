@@ -13,8 +13,10 @@ export type PutAuthMe200 = {
   email: string;
   username: string;
   name: string;
-  portal: PutAuthMe200Portal;
   isGuest: boolean;
+  isUser: boolean;
+  isAdmin: boolean;
+  portal: PutAuthMe200Portal;
   /** @nullable */
   role: PutAuthMe200Role;
   permissions: string[];

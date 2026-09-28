@@ -6,9 +6,10 @@
  * OpenAPI spec version: 0.0.0
  */
 import type { PostUsers200Image } from './postUsers200Image';
-import type { PostUsers200Portal } from './postUsers200Portal';
-import type { PostUsers200RoleId } from './postUsers200RoleId';
-import type { PostUsers200Role } from './postUsers200Role';
+import type { PostUsers200UserRoleId } from './postUsers200UserRoleId';
+import type { PostUsers200UserRole } from './postUsers200UserRole';
+import type { PostUsers200AdminRoleId } from './postUsers200AdminRoleId';
+import type { PostUsers200AdminRole } from './postUsers200AdminRole';
 import type { PostUsers200CreatedAt } from './postUsers200CreatedAt';
 import type { PostUsers200UpdatedAt } from './postUsers200UpdatedAt';
 
@@ -20,12 +21,17 @@ export type PostUsers200 = {
   name: string;
   /** @nullable */
   image: PostUsers200Image;
-  portal: PostUsers200Portal;
   isGuest: boolean;
+  isUser: boolean;
   /** @nullable */
-  roleId: PostUsers200RoleId;
+  userRoleId: PostUsers200UserRoleId;
   /** @nullable */
-  role: PostUsers200Role;
+  userRole: PostUsers200UserRole;
+  isAdmin: boolean;
+  /** @nullable */
+  adminRoleId: PostUsers200AdminRoleId;
+  /** @nullable */
+  adminRole: PostUsers200AdminRole;
   createdAt: PostUsers200CreatedAt;
   updatedAt: PostUsers200UpdatedAt;
 };

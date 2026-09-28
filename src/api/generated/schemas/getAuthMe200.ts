@@ -13,8 +13,10 @@ export type GetAuthMe200 = {
   email: string;
   username: string;
   name: string;
-  portal: GetAuthMe200Portal;
   isGuest: boolean;
+  isUser: boolean;
+  isAdmin: boolean;
+  portal: GetAuthMe200Portal;
   /** @nullable */
   role: GetAuthMe200Role;
   permissions: string[];
