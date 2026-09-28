@@ -2,7 +2,7 @@
 
 Admin dashboard for [Story Lens](https://storylens.iscoded.com): manage dashboard and reader accounts, roles and their per-endpoint permissions, the novel catalogue and runtime configs.
 
-- Production: https://storylens-dashboard.iscoded.com
+- Production: https://storylens-dashbaord.iscoded.com
 - API: the Story Lens backend's `/api/admin` routes (`storylens-backend`).
 - Part of the [Story Lens umbrella repository](https://github.com/Hussain7Abbas/storylens) at `apps/dashboard`.
 
@@ -32,7 +32,7 @@ Run the backend locally (`make dev` in `storylens-backend`). Other commands:
 
 ## Deployment
 
-The server checkout lives at `/srv/storylens-dashboard` on branch `main`. As root, `make sync` builds with Bun (Vite runs on the Node LTS in `/opt/storylens-node/bin`), copies `dist/` into a timestamped release under `/var/www/storylens-dashboard/releases`, swaps the `current` symlink, installs the Nginx site from `deploy/nginx/`, requests a Let's Encrypt certificate on the first run, checks `https://storylens-dashboard.iscoded.com/login` and rolls back on failure. The DNS record is a proxied Cloudflare A record to the same server as the website.
+The server checkout lives at `/srv/storylens-dashbaord` on branch `main`. As root, `make sync` builds with Bun (Vite runs on the Node LTS in `/opt/storylens-node/bin`), copies `dist/` into a timestamped release under `/var/www/storylens-dashbaord/releases`, swaps the `current` symlink, installs the Nginx site from `deploy/nginx/`, requests a Let's Encrypt certificate on the first run, checks `https://storylens-dashbaord.iscoded.com/login` and rolls back on failure. The DNS record is a proxied Cloudflare A record to the same server as the website.
 
 ## License
 

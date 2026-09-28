@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Run as root inside the server checkout (/srv/storylens-dashboard) on branch main.
+# Run as root inside the server checkout (/srv/storylens-dashbaord) on branch main.
 # Builds the static dashboard, activates it atomically, and rolls back on failure.
 cd "$(dirname "$0")/.."
-DOMAIN="storylens-dashboard.iscoded.com"
-WEB_ROOT="/var/www/storylens-dashboard"
+DOMAIN="storylens-dashbaord.iscoded.com"
+WEB_ROOT="/var/www/storylens-dashbaord"
 export PATH="/opt/storylens-node/bin:$HOME/.bun/bin:$PATH"
 command -v node >/dev/null || { echo "Install a supported Node LTS runtime for Vite; Bun still manages dependencies and scripts."; exit 1; }
 command -v bun >/dev/null || { echo "Install Bun."; exit 1; }
 [ "$(id -u)" -eq 0 ] || { echo "Deploy as root to manage nginx and releases."; exit 1; }
-exec 9>/var/lock/storylens-dashboard-deploy.lock
+exec 9>/var/lock/storylens-dashbaord-deploy.lock
 flock -n 9 || { echo "Another dashboard deploy is running."; exit 1; }
 
 bun install --frozen-lockfile
