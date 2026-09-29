@@ -1,6 +1,6 @@
 # Story Lens dashboard instructions
 
-Standalone public repository, also pinned in the Story Lens umbrella at `apps/dashboard`. It is the admin dashboard for the Story Lens API: dashboard users, roles and permissions, novels, keyword translations and configs. Use Bun and Biome; `make help` lists commands. Umbrella guide: `docs/dashboard.md`. The repository, domain and server paths are spelled `storylens-dashboard` on purpose (the owner's chosen name); keep that spelling in URLs and paths, while code and the umbrella path use `dashboard`.
+Standalone public repository, also pinned in the Story Lens umbrella at `apps/dashboard`. It is the admin dashboard for the Story Lens API: dashboard users, roles and permissions, novels, keyword translations and configs. Use Bun and Biome; `make help` lists commands. Umbrella guide: `docs/dashboard.md`. The repository, domain, web root and server checkout are named `storylens-dashboard`.
 
 ## Stack and structure
 
