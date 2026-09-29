@@ -5,18 +5,22 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
-import type { PostNovelsBodyOneDescription } from './postNovelsBodyOneDescription';
+import type { PostNovelsBodyOneNameAr } from './postNovelsBodyOneNameAr';
+import type { PostNovelsBodyOneNameEn } from './postNovelsBodyOneNameEn';
+import type { PostNovelsBodyOneDescriptionAr } from './postNovelsBodyOneDescriptionAr';
+import type { PostNovelsBodyOneDescriptionEn } from './postNovelsBodyOneDescriptionEn';
 import type { PostNovelsBodyOneContext } from './postNovelsBodyOneContext';
 import type { PostNovelsBodyOneImageId } from './postNovelsBodyOneImageId';
 
 export type PostNovelsBodyOne = {
-  /**
-   * @minLength 1
-   * @maxLength 300
-   */
-  name: string;
   /** @nullable */
-  description?: PostNovelsBodyOneDescription;
+  nameAr?: PostNovelsBodyOneNameAr;
+  /** @nullable */
+  nameEn?: PostNovelsBodyOneNameEn;
+  /** @nullable */
+  descriptionAr?: PostNovelsBodyOneDescriptionAr;
+  /** @nullable */
+  descriptionEn?: PostNovelsBodyOneDescriptionEn;
   /** @nullable */
   context?: PostNovelsBodyOneContext;
   /** @nullable */

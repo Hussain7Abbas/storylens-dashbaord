@@ -5,18 +5,22 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
-import type { PostNovelsBodyTwoDescription } from './postNovelsBodyTwoDescription';
+import type { PostNovelsBodyTwoNameAr } from './postNovelsBodyTwoNameAr';
+import type { PostNovelsBodyTwoNameEn } from './postNovelsBodyTwoNameEn';
+import type { PostNovelsBodyTwoDescriptionAr } from './postNovelsBodyTwoDescriptionAr';
+import type { PostNovelsBodyTwoDescriptionEn } from './postNovelsBodyTwoDescriptionEn';
 import type { PostNovelsBodyTwoContext } from './postNovelsBodyTwoContext';
 import type { PostNovelsBodyTwoImageId } from './postNovelsBodyTwoImageId';
 
 export type PostNovelsBodyTwo = {
-  /**
-   * @minLength 1
-   * @maxLength 300
-   */
-  name: string;
   /** @nullable */
-  description?: PostNovelsBodyTwoDescription;
+  nameAr?: PostNovelsBodyTwoNameAr;
+  /** @nullable */
+  nameEn?: PostNovelsBodyTwoNameEn;
+  /** @nullable */
+  descriptionAr?: PostNovelsBodyTwoDescriptionAr;
+  /** @nullable */
+  descriptionEn?: PostNovelsBodyTwoDescriptionEn;
   /** @nullable */
   context?: PostNovelsBodyTwoContext;
   /** @nullable */

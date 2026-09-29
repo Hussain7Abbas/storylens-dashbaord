@@ -29,6 +29,7 @@ import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/lib/auth";
 import { formatDate, formatNumber } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
+import { bothNames } from "@/lib/translation";
 import { useSearchState } from "@/lib/use-search-state";
 
 type Novel = GetNovels200DataItem;
@@ -111,8 +112,10 @@ function NovelForm({
 	const queryClient = useQueryClient();
 	const toast = useToast();
 	const [values, setValues] = useState({
-		name: novel?.name ?? "",
-		description: novel?.description ?? "",
+		nameAr: novel?.nameAr ?? "",
+		nameEn: novel?.nameEn ?? "",
+		descriptionAr: novel?.descriptionAr ?? "",
+		descriptionEn: novel?.descriptionEn ?? "",
 		context: novel?.context ?? "",
 	});
 	const [slugs, setSlugs] = useState<string[]>(novel?.slugs ?? []);
@@ -152,9 +155,14 @@ function NovelForm({
 	const submit = (event: FormEvent) => {
 		event.preventDefault();
 		setError("");
+		if (!values.nameAr.trim() && !values.nameEn.trim()) {
+			return setError("Enter an Arabic or English name.");
+		}
 		const data = {
-			name: values.name.trim(),
-			description: values.description.trim() || null,
+			nameAr: values.nameAr.trim() || null,
+			nameEn: values.nameEn.trim() || null,
+			descriptionAr: values.descriptionAr.trim() || null,
+			descriptionEn: values.descriptionEn.trim() || null,
 			context: values.context.trim() || null,
 			imageId: image?.id ?? null,
 			slugs,
@@ -211,34 +219,70 @@ function NovelForm({
 					)}
 				</div>
 			</div>
-			<Field label="Name" hint="Unique; readers see it in the extension.">
-				<input
-					className="input"
-					required
-					maxLength={300}
-					value={values.name}
-					onChange={(event) =>
-						setValues({ ...values, name: event.target.value })
-					}
-				/>
-			</Field>
+			<div className="grid gap-4 sm:grid-cols-2">
+				<Field
+					label="Arabic name"
+					hint="Readers using Arabic see the novel only when it has one."
+				>
+					<input
+						className="input"
+						dir="rtl"
+						lang="ar"
+						maxLength={300}
+						value={values.nameAr}
+						onChange={(event) =>
+							setValues({ ...values, nameAr: event.target.value })
+						}
+					/>
+				</Field>
+				<Field
+					label="English name"
+					hint="Readers using English see the novel only when it has one."
+				>
+					<input
+						className="input"
+						lang="en"
+						maxLength={300}
+						value={values.nameEn}
+						onChange={(event) =>
+							setValues({ ...values, nameEn: event.target.value })
+						}
+					/>
+				</Field>
+			</div>
 			<Field
 				label="Slugs"
 				hint="URL slugs the extension uses to detect this novel on reading sites."
 			>
 				<SlugInput slugs={slugs} onChange={setSlugs} />
 			</Field>
-			<Field label="Description">
-				<textarea
-					className="input"
-					rows={3}
-					maxLength={5000}
-					value={values.description}
-					onChange={(event) =>
-						setValues({ ...values, description: event.target.value })
-					}
-				/>
-			</Field>
+			<div className="grid gap-4 sm:grid-cols-2">
+				<Field label="Arabic description">
+					<textarea
+						className="input"
+						dir="rtl"
+						lang="ar"
+						rows={3}
+						maxLength={5000}
+						value={values.descriptionAr}
+						onChange={(event) =>
+							setValues({ ...values, descriptionAr: event.target.value })
+						}
+					/>
+				</Field>
+				<Field label="English description">
+					<textarea
+						className="input"
+						lang="en"
+						rows={3}
+						maxLength={5000}
+						value={values.descriptionEn}
+						onChange={(event) =>
+							setValues({ ...values, descriptionEn: event.target.value })
+						}
+					/>
+				</Field>
+			</div>
 			<Field
 				label="AI context"
 				hint="Setting, premise, tone and main cast that AI prompts use for this novel."
@@ -400,7 +444,7 @@ export function NovelsPage() {
 													</div>
 													<div className="min-w-0">
 														<p className="font-medium capitalize">
-															{novel.name}
+															{bothNames(novel)}
 														</p>
 														<p className="flex flex-wrap items-center gap-2 text-xs text-muted">
 															{novel.slugs.length > 0
@@ -433,7 +477,7 @@ export function NovelsPage() {
 														<Button
 															variant="ghost"
 															iconOnly
-															aria-label={`Edit ${novel.name}`}
+															aria-label={`Edit ${bothNames(novel)}`}
 															title="Edit"
 															onClick={() => setEditing(novel)}
 															icon={
@@ -450,7 +494,7 @@ export function NovelsPage() {
 															variant="ghost"
 															iconOnly
 															className="text-danger"
-															aria-label={`Delete ${novel.name}`}
+															aria-label={`Delete ${bothNames(novel)}`}
 															title="Delete"
 															onClick={() => setDeleting(novel)}
 															icon={
@@ -503,8 +547,10 @@ export function NovelsPage() {
 				onClose={closeDelete}
 				onConfirm={() => deleting && remove.mutate({ id: deleting.id })}
 			>
-				<strong className="text-ink capitalize">{deleting?.name}</strong> and
-				its {formatNumber(deleting?.counts.keywords ?? 0)} keywords,{" "}
+				<strong className="text-ink capitalize">
+					{deleting ? bothNames(deleting) : ""}
+				</strong>{" "}
+				and its {formatNumber(deleting?.counts.keywords ?? 0)} keywords,{" "}
 				{formatNumber(deleting?.counts.chapters ?? 0)} chapters and{" "}
 				{formatNumber(deleting?.counts.replacements ?? 0)} replacements will be
 				deleted for every reader. This can’t be undone.

@@ -5,18 +5,22 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
-import type { PutNovelsByIdBodyTwoDescription } from './putNovelsByIdBodyTwoDescription';
+import type { PutNovelsByIdBodyTwoNameAr } from './putNovelsByIdBodyTwoNameAr';
+import type { PutNovelsByIdBodyTwoNameEn } from './putNovelsByIdBodyTwoNameEn';
+import type { PutNovelsByIdBodyTwoDescriptionAr } from './putNovelsByIdBodyTwoDescriptionAr';
+import type { PutNovelsByIdBodyTwoDescriptionEn } from './putNovelsByIdBodyTwoDescriptionEn';
 import type { PutNovelsByIdBodyTwoContext } from './putNovelsByIdBodyTwoContext';
 import type { PutNovelsByIdBodyTwoImageId } from './putNovelsByIdBodyTwoImageId';
 
 export type PutNovelsByIdBodyTwo = {
-  /**
-   * @minLength 1
-   * @maxLength 300
-   */
-  name?: string;
   /** @nullable */
-  description?: PutNovelsByIdBodyTwoDescription;
+  nameAr?: PutNovelsByIdBodyTwoNameAr;
+  /** @nullable */
+  nameEn?: PutNovelsByIdBodyTwoNameEn;
+  /** @nullable */
+  descriptionAr?: PutNovelsByIdBodyTwoDescriptionAr;
+  /** @nullable */
+  descriptionEn?: PutNovelsByIdBodyTwoDescriptionEn;
   /** @nullable */
   context?: PutNovelsByIdBodyTwoContext;
   /** @nullable */

@@ -5,7 +5,10 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
-import type { PostNovels200Description } from './postNovels200Description';
+import type { PostNovels200NameAr } from './postNovels200NameAr';
+import type { PostNovels200NameEn } from './postNovels200NameEn';
+import type { PostNovels200DescriptionAr } from './postNovels200DescriptionAr';
+import type { PostNovels200DescriptionEn } from './postNovels200DescriptionEn';
 import type { PostNovels200Context } from './postNovels200Context';
 import type { PostNovels200ImageId } from './postNovels200ImageId';
 import type { PostNovels200CreatedById } from './postNovels200CreatedById';
@@ -17,8 +20,10 @@ import type { PostNovels200Counts } from './postNovels200Counts';
 
 export type PostNovels200 = {
   id: string;
-  name: string;
-  description: PostNovels200Description;
+  nameAr: PostNovels200NameAr;
+  nameEn: PostNovels200NameEn;
+  descriptionAr: PostNovels200DescriptionAr;
+  descriptionEn: PostNovels200DescriptionEn;
   context: PostNovels200Context;
   slugs: string[];
   imageId: PostNovels200ImageId;

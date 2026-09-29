@@ -15,6 +15,7 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { AccountPage } from "@/pages/account";
 import { ConfigsPage } from "@/pages/configs";
 import { LoginPage } from "@/pages/login";
+import { MatchTranslationsPage } from "@/pages/match-translations";
 import { NovelsPage } from "@/pages/novels";
 import { OverviewPage } from "@/pages/overview";
 import { RoleEditorPage } from "@/pages/role-editor";
@@ -63,6 +64,7 @@ function Home() {
 		[PERMISSIONS.users.list, "/users"],
 		[PERMISSIONS.roles.list, "/roles"],
 		[PERMISSIONS.novels.list, "/novels"],
+		[PERMISSIONS.keywords.list, "/translations"],
 		[PERMISSIONS.configs.list, "/configs"],
 	].find(([permission]) => permission && can(permission));
 	return first?.[1] ? <Navigate to={first[1]} replace /> : <Forbidden />;
@@ -114,6 +116,14 @@ const router = createBrowserRouter([
 						element: (
 							<Allow permission={PERMISSIONS.novels.list}>
 								<NovelsPage />
+							</Allow>
+						),
+					},
+					{
+						path: "translations",
+						element: (
+							<Allow permission={PERMISSIONS.keywords.list}>
+								<MatchTranslationsPage />
 							</Allow>
 						),
 					},

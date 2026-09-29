@@ -5,7 +5,10 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
-import type { PutNovelsById200Description } from './putNovelsById200Description';
+import type { PutNovelsById200NameAr } from './putNovelsById200NameAr';
+import type { PutNovelsById200NameEn } from './putNovelsById200NameEn';
+import type { PutNovelsById200DescriptionAr } from './putNovelsById200DescriptionAr';
+import type { PutNovelsById200DescriptionEn } from './putNovelsById200DescriptionEn';
 import type { PutNovelsById200Context } from './putNovelsById200Context';
 import type { PutNovelsById200ImageId } from './putNovelsById200ImageId';
 import type { PutNovelsById200CreatedById } from './putNovelsById200CreatedById';
@@ -17,8 +20,10 @@ import type { PutNovelsById200Counts } from './putNovelsById200Counts';
 
 export type PutNovelsById200 = {
   id: string;
-  name: string;
-  description: PutNovelsById200Description;
+  nameAr: PutNovelsById200NameAr;
+  nameEn: PutNovelsById200NameEn;
+  descriptionAr: PutNovelsById200DescriptionAr;
+  descriptionEn: PutNovelsById200DescriptionEn;
   context: PutNovelsById200Context;
   slugs: string[];
   imageId: PutNovelsById200ImageId;

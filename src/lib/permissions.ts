@@ -27,6 +27,13 @@ export const PERMISSIONS = {
 		delete: "DELETE /api/admin/novels/:id",
 		upload: "POST /api/admin/files/upload",
 	},
+	keywords: {
+		list: "GET /api/admin/keywords/",
+		update: "PUT /api/admin/keywords/:id",
+		link: "POST /api/admin/keywords/:id/link",
+		alias: "POST /api/admin/keywords/:id/alias",
+		version: "POST /api/admin/keywords/:id/version",
+	},
 	configs: {
 		list: "GET /api/admin/configs/",
 		save: "PUT /api/admin/configs/",

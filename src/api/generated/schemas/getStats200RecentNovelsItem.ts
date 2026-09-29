@@ -5,10 +5,15 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
+import type { GetStats200RecentNovelsItemNameAr } from './getStats200RecentNovelsItemNameAr';
+import type { GetStats200RecentNovelsItemNameEn } from './getStats200RecentNovelsItemNameEn';
 import type { GetStats200RecentNovelsItemCreatedAt } from './getStats200RecentNovelsItemCreatedAt';
 
 export type GetStats200RecentNovelsItem = {
   id: string;
-  name: string;
+  /** @nullable */
+  nameAr: GetStats200RecentNovelsItemNameAr;
+  /** @nullable */
+  nameEn: GetStats200RecentNovelsItemNameEn;
   createdAt: GetStats200RecentNovelsItemCreatedAt;
 };

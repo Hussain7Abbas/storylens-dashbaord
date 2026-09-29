@@ -5,7 +5,10 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
-import type { GetNovels200DataItemDescription } from './getNovels200DataItemDescription';
+import type { GetNovels200DataItemNameAr } from './getNovels200DataItemNameAr';
+import type { GetNovels200DataItemNameEn } from './getNovels200DataItemNameEn';
+import type { GetNovels200DataItemDescriptionAr } from './getNovels200DataItemDescriptionAr';
+import type { GetNovels200DataItemDescriptionEn } from './getNovels200DataItemDescriptionEn';
 import type { GetNovels200DataItemContext } from './getNovels200DataItemContext';
 import type { GetNovels200DataItemImageId } from './getNovels200DataItemImageId';
 import type { GetNovels200DataItemCreatedById } from './getNovels200DataItemCreatedById';
@@ -17,8 +20,10 @@ import type { GetNovels200DataItemCounts } from './getNovels200DataItemCounts';
 
 export type GetNovels200DataItem = {
   id: string;
-  name: string;
-  description: GetNovels200DataItemDescription;
+  nameAr: GetNovels200DataItemNameAr;
+  nameEn: GetNovels200DataItemNameEn;
+  descriptionAr: GetNovels200DataItemDescriptionAr;
+  descriptionEn: GetNovels200DataItemDescriptionEn;
   context: GetNovels200DataItemContext;
   slugs: string[];
   imageId: GetNovels200DataItemImageId;

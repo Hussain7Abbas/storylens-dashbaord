@@ -5,18 +5,22 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
-import type { PostNovelsBodyThreeDescription } from './postNovelsBodyThreeDescription';
+import type { PostNovelsBodyThreeNameAr } from './postNovelsBodyThreeNameAr';
+import type { PostNovelsBodyThreeNameEn } from './postNovelsBodyThreeNameEn';
+import type { PostNovelsBodyThreeDescriptionAr } from './postNovelsBodyThreeDescriptionAr';
+import type { PostNovelsBodyThreeDescriptionEn } from './postNovelsBodyThreeDescriptionEn';
 import type { PostNovelsBodyThreeContext } from './postNovelsBodyThreeContext';
 import type { PostNovelsBodyThreeImageId } from './postNovelsBodyThreeImageId';
 
 export type PostNovelsBodyThree = {
-  /**
-   * @minLength 1
-   * @maxLength 300
-   */
-  name: string;
   /** @nullable */
-  description?: PostNovelsBodyThreeDescription;
+  nameAr?: PostNovelsBodyThreeNameAr;
+  /** @nullable */
+  nameEn?: PostNovelsBodyThreeNameEn;
+  /** @nullable */
+  descriptionAr?: PostNovelsBodyThreeDescriptionAr;
+  /** @nullable */
+  descriptionEn?: PostNovelsBodyThreeDescriptionEn;
   /** @nullable */
   context?: PostNovelsBodyThreeContext;
   /** @nullable */

@@ -1,5 +1,6 @@
 import {
 	BookOpen,
+	Languages,
 	LayoutDashboard,
 	LogOut,
 	Menu,
@@ -52,6 +53,12 @@ const NAV: NavItem[] = [
 		label: "Novels",
 		icon: <BookOpen {...ICON} />,
 		permission: PERMISSIONS.novels.list,
+	},
+	{
+		to: "/translations",
+		label: "Match translations",
+		icon: <Languages {...ICON} />,
+		permission: PERMISSIONS.keywords.list,
 	},
 	{
 		to: "/configs",

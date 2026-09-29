@@ -20,6 +20,11 @@ export const ALL_PERMISSIONS = [
 	"PUT /api/admin/novels/:id",
 	"DELETE /api/admin/novels/:id",
 	"POST /api/admin/files/upload",
+	"GET /api/admin/keywords/",
+	"PUT /api/admin/keywords/:id",
+	"POST /api/admin/keywords/:id/link",
+	"POST /api/admin/keywords/:id/alias",
+	"POST /api/admin/keywords/:id/version",
 	"GET /api/admin/configs/",
 	"PUT /api/admin/configs/",
 	"DELETE /api/admin/configs/:key",
@@ -121,6 +126,96 @@ const json = (route: Route, body: unknown, status = 200) =>
 		body: JSON.stringify(body),
 	});
 
+const NOVEL_ID = "11111111-1111-4111-8111-111111111111";
+export const KEYWORD_IDS = {
+	mira: "22222222-2222-4222-8222-222222222222",
+	lanternAr: "33333333-3333-4333-8333-333333333333",
+	lanternEn: "44444444-4444-4444-8444-444444444444",
+};
+
+export const novels = [
+	{
+		id: NOVEL_ID,
+		nameAr: "أرشيف الفانوس",
+		nameEn: "The Lantern Archive",
+		descriptionAr: null,
+		descriptionEn: null,
+		context: null,
+		slugs: ["lantern-archive"],
+		imageId: null,
+		image: null,
+		createdById: null,
+		createdBy: null,
+		createdAt: now,
+		updatedAt: now,
+		counts: { chapters: 0, keywords: 3, replacements: 0 },
+	},
+];
+
+export const keywords = [
+	{
+		id: KEYWORD_IDS.mira,
+		novelId: NOVEL_ID,
+		nameAr: "ميرا",
+		nameEn: null,
+		description: "حارسة الأرشيف",
+		aliases: [],
+	},
+	{
+		id: KEYWORD_IDS.lanternAr,
+		novelId: NOVEL_ID,
+		nameAr: "الفانوس",
+		nameEn: null,
+		description: null,
+		aliases: [],
+	},
+	{
+		id: KEYWORD_IDS.lanternEn,
+		novelId: NOVEL_ID,
+		nameAr: null,
+		nameEn: "The Lantern",
+		description: "A glowing relic",
+		aliases: [],
+	},
+];
+
+/** Mocks the paired desktop client on 127.0.0.1 with a fixed AI answer. */
+export async function mockDesktopClient(page: Page) {
+	const prompts: string[] = [];
+	await page.addInitScript(() =>
+		localStorage.setItem(
+			"storylens-dashboard-desktop-client",
+			JSON.stringify({ port: 47000, token: "pair", model: "m", effort: "low" }),
+		),
+	);
+	await page.route("http://127.0.0.1:47000/**", async (route) => {
+		const body = route.request().postDataJSON() as {
+			prompt: string;
+			responseLanguage: string;
+		};
+		prompts.push(body.prompt);
+		const answer =
+			body.responseLanguage === "en"
+				? [
+						{ id: KEYWORD_IDS.mira, translation: "Mira", matchId: null },
+						{
+							id: KEYWORD_IDS.lanternAr,
+							translation: "Lantern",
+							matchId: KEYWORD_IDS.lanternEn,
+						},
+					]
+				: [
+						{
+							id: KEYWORD_IDS.lanternEn,
+							translation: "الفانوس",
+							matchId: null,
+						},
+					];
+		return json(route, { output: JSON.stringify(answer) });
+	});
+	return prompts;
+}
+
 /** Mocks the dashboard API; `signedIn` seeds a stored session token. */
 export async function mockApi(
 	page: Page,
@@ -169,7 +264,12 @@ export async function mockApi(
 					},
 				],
 				recentNovels: [
-					{ id: "n1", name: "The Lantern Archive", createdAt: now },
+					{
+						id: "n1",
+						nameAr: null,
+						nameEn: "The Lantern Archive",
+						createdAt: now,
+					},
 				],
 			});
 		}
@@ -249,7 +349,19 @@ export async function mockApi(
 			return json(route, { data: permissions[portal] });
 		}
 		if (path === "/api/admin/novels/")
-			return json(route, { data: [], total: 0 });
+			return json(route, { data: novels, total: novels.length });
+		if (path === "/api/admin/keywords/") {
+			// Untranslated rows, or link candidates named only in English.
+			const data =
+				url.searchParams.get("has") === "en"
+					? keywords.filter((keyword) => keyword.nameEn && !keyword.nameAr)
+					: keywords;
+			return json(route, { data, total: data.length });
+		}
+		if (path.startsWith("/api/admin/keywords/") && method !== "GET") {
+			const keyword = keywords.find((item) => path.includes(item.id));
+			return json(route, { ...keyword, ...(request.postDataJSON() as object) });
+		}
 		if (path === "/api/admin/configs/") return json(route, { data: [] });
 		return json(route, { message: "Not mocked" }, 404);
 	});

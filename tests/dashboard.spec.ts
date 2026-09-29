@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { mockApi } from "./fixtures";
+import { KEYWORD_IDS, mockApi, mockDesktopClient, novels } from "./fixtures";
 
 async function expectAccessible(page: import("@playwright/test").Page) {
 	const results = await new AxeBuilder({ page })
@@ -144,4 +144,57 @@ test("the role editor saves the selected reader permissions", async ({
 	expect(saved?.body).toMatchObject({
 		permissionIds: ["p-user-1", "p-user-2"],
 	});
+});
+
+test("match translations suggests names and saves a row, a link and a bulk selection", async ({
+	page,
+}) => {
+	const requests = await mockApi(page, { signedIn: true });
+	const prompts = await mockDesktopClient(page);
+	await page.goto(`/translations?novel=${novels[0]?.id}`);
+
+	const mira = page.getByRole("textbox", { name: "English name for ميرا" });
+	await expect(mira).toHaveValue("Mira");
+	// The AI matched "الفانوس" to the English-only "The Lantern", so it prefills Link.
+	const lanternRow = page
+		.getByRole("row")
+		.filter({ has: page.getByRole("checkbox", { name: "Select الفانوس" }) });
+	await expect(lanternRow.getByText("The Lantern")).toBeVisible();
+	await expect(
+		page.getByRole("textbox", { name: "English name for الفانوس" }),
+	).toBeDisabled();
+	await expect(
+		page.getByRole("combobox", { name: "Make الفانوس an alias of" }),
+	).toBeDisabled();
+	expect(prompts).toHaveLength(2);
+
+	await page
+		.getByRole("row")
+		.filter({ has: mira })
+		.getByRole("button", { name: "Save" })
+		.click();
+	await expect(page.getByText("Row saved")).toBeVisible();
+	expect(requests).toContainEqual({
+		method: "PUT",
+		path: `/api/admin/keywords/${KEYWORD_IDS.mira}`,
+		body: { nameEn: "Mira" },
+	});
+
+	await page.getByRole("checkbox", { name: "Select الفانوس" }).check();
+	await page.getByRole("checkbox", { name: "Select The Lantern" }).check();
+	await page.getByRole("button", { name: "Save selected (2)" }).click();
+	await expect(page.getByText("2 rows saved")).toBeVisible();
+	expect(requests).toContainEqual({
+		method: "POST",
+		path: `/api/admin/keywords/${KEYWORD_IDS.lanternAr}/link`,
+		body: { targetId: KEYWORD_IDS.lanternEn },
+	});
+	expect(requests).toContainEqual({
+		method: "PUT",
+		path: `/api/admin/keywords/${KEYWORD_IDS.lanternEn}`,
+		body: { nameAr: "الفانوس" },
+	});
+
+	const results = await new AxeBuilder({ page }).analyze();
+	expect(results.violations).toEqual([]);
 });

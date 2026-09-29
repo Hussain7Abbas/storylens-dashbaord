@@ -6,6 +6,7 @@ import { EmptyState, ErrorState, PageHeader } from "@/components/ui/page";
 import { useAuth } from "@/lib/auth";
 import { formatDate, formatNumber } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
+import { bothNames } from "@/lib/translation";
 
 function Stat({
 	label,
@@ -190,7 +191,7 @@ export function OverviewPage() {
 													className="shrink-0 text-muted"
 												/>
 												<span className="truncate capitalize">
-													{novel.name}
+													{bothNames(novel)}
 												</span>
 											</p>
 											<span className="shrink-0 text-xs text-muted">
