@@ -15,6 +15,7 @@ Standalone public repository, also pinned in the Story Lens umbrella at `apps/da
 ## Access rules
 
 - The dashboard has sign-in only. Never add registration: dashboard access (`isAdmin` + a dashboard role) is granted from the Users page (`POST`/`PUT /api/admin/users`) or by the backend seed. One account can have reader access (`isUser` + a reader role), dashboard access, or both, with one email, username and password; readers register from the extension and website.
+- When enabling reader access in the Users form, default to the `reader` role by slug, even if the API lists `guest` first. Default dashboard access to `super-admin` by slug. If the preferred reader role is missing, require an explicit choice instead of assigning Guest.
 - The API enforces every permission. The UI only hides pages and actions: guard routes with `Allow` in `src/app.tsx` and actions with `can(PERMISSIONS…)`, and show `Forbidden` rather than an empty page. When a backend admin route is added or renamed, update `src/lib/permissions.ts`, the generated client and the relevant page.
 - A user can't change their own dashboard access or role, delete themselves or remove the last super admin; the API refuses these and the UI does not offer them. The `super-admin` role always holds every admin permission and its list is read-only.
 
@@ -27,5 +28,6 @@ Standalone public repository, also pinned in the Story Lens umbrella at `apps/da
 ## Checks and deployment
 
 - Run `bun run typecheck`, `bun run lint`, `bun run build` and `bun run test` (Playwright + axe against the production build with the API mocked in `tests/fixtures.ts`; set `CHROMIUM_PATH` to use a preinstalled Chromium).
+- `tests/live-api.spec.ts` is an opt-in Chromium test of the built dashboard, real local backend and isolated PostgreSQL database. It requires `STORYLENS_E2E_API_URL`, `STORYLENS_E2E_ADMIN_EMAIL` and `STORYLENS_E2E_ADMIN_PASSWORD`; the API URL must be loopback. Build with matching `VITE_API_URL` and run a preview server before the test. See the umbrella dashboard guide.
 - Production: https://storylens-dashbaord.iscoded.com on the `ssh raseen` server. The checkout is `/srv/storylens-dashbaord` on `main`; `make sync` (as root) fast-forwards, builds, atomically swaps `/var/www/storylens-dashbaord/current`, installs `deploy/nginx/storylens-dashbaord.iscoded.com.conf`, obtains the Let's Encrypt certificate on first run, checks the site and rolls back on failure. The Nginx CSP allows API calls only to `https://storylens-api.iscoded.com`; update it with `VITE_API_URL` (`.env.production`).
 - Keep this file, `README.md` and the umbrella `docs/dashboard.md` current with changes.

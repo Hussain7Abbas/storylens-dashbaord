@@ -51,6 +51,18 @@ export function adminUser(permissions = ALL_PERMISSIONS) {
 
 export const roles = [
 	{
+		id: "role-guest",
+		slug: "guest",
+		name: "Guest",
+		description: "Limited reader access.",
+		portal: "user",
+		isSystem: true,
+		createdAt: now,
+		updatedAt: now,
+		userCount: 0,
+		permissionIds: [],
+	},
+	{
 		id: "role-super",
 		slug: "super-admin",
 		name: "Super Admin",

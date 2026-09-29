@@ -27,6 +27,7 @@ Run the backend locally (`make dev` in `storylens-backend`). Other commands:
 | `bun run typecheck` / `bun run lint` | TypeScript and Biome |
 | `bun run build` | Static build in `dist/` |
 | `bun run test` | Playwright + axe tests with a mocked API |
+| `bun run test:e2e -- --project=chromium tests/live-api.spec.ts` | Opt-in test against a built dashboard, loopback API and disposable seeded PostgreSQL database; set `STORYLENS_E2E_API_URL`, `STORYLENS_E2E_ADMIN_EMAIL` and `STORYLENS_E2E_ADMIN_PASSWORD` (see the umbrella `docs/dashboard.md`) |
 | `bun run orval` | Regenerate `src/api/generated/` from a running backend (`ORVAL_API_URL`) |
 | `make sync` | On the server: pull `main`, build and activate a release |
 

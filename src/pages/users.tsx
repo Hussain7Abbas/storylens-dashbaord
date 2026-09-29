@@ -85,6 +85,13 @@ function AccessSection({
 }) {
 	const { label, hint, flag, roleKey } = ACCESS[portal];
 	const options = roles.filter((role) => role.portal === portal);
+	const preferredRole = options.find(
+		(role) => role.slug === (portal === "user" ? "reader" : "super-admin"),
+	);
+	const defaultRoleId =
+		preferredRole?.id ??
+		(portal === "admin" ? options[0]?.id : undefined) ??
+		"";
 	const enabled = values[flag];
 	return (
 		<fieldset className="rounded-[var(--control-radius)] border border-line p-4">
@@ -98,9 +105,9 @@ function AccessSection({
 					onChange={(event) =>
 						onChange({
 							[flag]: event.target.checked,
-							// Pick the first role of this portal when access is switched on.
+							// Reader access must not silently default to the Guest role.
 							...(event.target.checked && !values[roleKey]
-								? { [roleKey]: options[0]?.id ?? "" }
+								? { [roleKey]: defaultRoleId }
 								: {}),
 						})
 					}
@@ -159,6 +166,9 @@ function UserForm({
 		isAdmin: user?.isAdmin ?? true,
 		adminRoleId:
 			user?.adminRoleId ??
+			roles.find(
+				(role) => role.slug === "super-admin" && role.portal === "admin",
+			)?.id ??
 			roles.find((role) => role.portal === "admin")?.id ??
 			"",
 	});
