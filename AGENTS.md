@@ -1,6 +1,6 @@
 # Story Lens dashboard instructions
 
-Standalone public repository, also pinned in the Story Lens umbrella at `apps/dashboard`. It is the admin dashboard for the Story Lens API: dashboard users, roles and permissions, novels, keyword translations and configs. Use Bun and Biome; `make help` lists commands. Umbrella guide: `docs/dashboard.md`. The repository, domain and server paths are spelled `storylens-dashbaord` on purpose (the owner's chosen name); keep that spelling in URLs and paths, while code and the umbrella path use `dashboard`.
+Standalone public repository, also pinned in the Story Lens umbrella at `apps/dashboard`. It is the admin dashboard for the Story Lens API: dashboard users, roles and permissions, novels, keyword translations and configs. Use Bun and Biome; `make help` lists commands. Umbrella guide: `docs/dashboard.md`. The repository, domain and server paths are spelled `storylens-dashboard` on purpose (the owner's chosen name); keep that spelling in URLs and paths, while code and the umbrella path use `dashboard`.
 
 ## Stack and structure
 
@@ -29,5 +29,5 @@ Standalone public repository, also pinned in the Story Lens umbrella at `apps/da
 
 - Run `bun run typecheck`, `bun run lint`, `bun run build` and `bun run test` (Playwright + axe against the production build with the API mocked in `tests/fixtures.ts`; set `CHROMIUM_PATH` to use a preinstalled Chromium).
 - `tests/live-api.spec.ts` is an opt-in Chromium test of the built dashboard, real local backend and isolated PostgreSQL database. It requires `STORYLENS_E2E_API_URL`, `STORYLENS_E2E_ADMIN_EMAIL` and `STORYLENS_E2E_ADMIN_PASSWORD`; the API URL must be loopback. Build with matching `VITE_API_URL` and run a preview server before the test. See the umbrella dashboard guide.
-- Production: https://storylens-dashbaord.iscoded.com on the `ssh raseen` server. The checkout is `/srv/storylens-dashbaord` on `main`; `make sync` (as root) fast-forwards, builds, atomically swaps `/var/www/storylens-dashbaord/current`, installs `deploy/nginx/storylens-dashbaord.iscoded.com.conf`, obtains the Let's Encrypt certificate on first run, checks the site and rolls back on failure. The Nginx CSP allows API calls only to `https://storylens-api.iscoded.com`; update it with `VITE_API_URL` (`.env.production`).
+- Production: https://storylens-dashboard.iscoded.com on the `ssh raseen` server. The checkout is `/srv/storylens-dashboard` on `main`; `make sync` (as root) fast-forwards, builds, atomically swaps `/var/www/storylens-dashboard/current`, installs `deploy/nginx/storylens-dashboard.iscoded.com.conf`, obtains the Let's Encrypt certificate on first run, checks the site and rolls back on failure. The Nginx CSP allows API calls only to `https://storylens-api.iscoded.com`; update it with `VITE_API_URL` (`.env.production`).
 - Keep this file, `README.md` and the umbrella `docs/dashboard.md` current with changes.
