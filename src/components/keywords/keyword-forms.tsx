@@ -359,12 +359,12 @@ export function AliasForm({
 	// The name's script picks its language; the translation is the other one.
 	const nameLanguage: Language = scriptLanguage(name) ?? "en";
 	const translationLanguage = otherLanguage(nameLanguage);
-	const [translation, setTranslation] = useState(() => {
-		if (!alias) return "";
-		const names = aliasNames(alias);
-		const own = scriptLanguage(alias.name) ?? "en";
-		return names[otherLanguage(own)] ?? "";
-	});
+	const [translations, setTranslations] = useState<Record<Language, string>>(
+		() => {
+			const names = alias ? aliasNames(alias) : { ar: null, en: null };
+			return { ar: names.ar ?? "", en: names.en ?? "" };
+		},
+	);
 	const [fullWord, setFullWord] = useState(
 		(alias?.matchingType ?? "FULL") === "FULL",
 	);
@@ -380,7 +380,14 @@ export function AliasForm({
 		if (!trimmed) return setError("Enter the alias name.");
 		const names: Record<Language, string | null> = { ar: null, en: null };
 		names[nameLanguage] = trimmed;
-		names[translationLanguage] = translation.trim() || null;
+		const translated = translations[translationLanguage].trim();
+		const detected = scriptLanguage(translated);
+		if (detected && detected !== translationLanguage) {
+			return setError(
+				`Enter the translation in ${LANGUAGE_LABELS[translationLanguage]}.`,
+			);
+		}
+		names[translationLanguage] = translated || null;
 		const body = {
 			name: trimmed,
 			nameAr: names.ar,
@@ -426,8 +433,13 @@ export function AliasForm({
 					dir={translationLanguage === "ar" ? "rtl" : "ltr"}
 					lang={translationLanguage}
 					maxLength={300}
-					value={translation}
-					onChange={(event) => setTranslation(event.target.value)}
+					value={translations[translationLanguage]}
+					onChange={(event) =>
+						setTranslations({
+							...translations,
+							[translationLanguage]: event.target.value,
+						})
+					}
 				/>
 			</Field>
 			<FullWordToggle checked={fullWord} onChange={setFullWord} />

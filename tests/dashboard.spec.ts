@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import {
 	KEYWORD_IDS,
+	keywordDetails,
 	keywords,
 	mockApi,
 	mockDesktopClient,
@@ -361,6 +362,50 @@ test("cancel suggesting aborts the AI request", async ({ page }) => {
 	await expect(page.getByRole("alert")).toHaveCount(0);
 });
 
+test("re-suggesting replaces AI drafts but keeps manually edited names", async ({
+	page,
+}) => {
+	await mockApi(page, { signedIn: true });
+	await page.addInitScript(() =>
+		localStorage.setItem(
+			"storylens-dashboard-desktop-client",
+			JSON.stringify({ port: 47000, token: "pair", model: "m", effort: "low" }),
+		),
+	);
+	let englishRuns = 0;
+	await page.route("http://127.0.0.1:47000/**", async (route) => {
+		const body = route.request().postDataJSON() as { responseLanguage: string };
+		if (body.responseLanguage === "en") englishRuns++;
+		const answer =
+			body.responseLanguage === "en"
+				? [
+						{ id: KEYWORD_IDS.mira, translation: `Mira ${englishRuns}` },
+						{
+							id: KEYWORD_IDS.lanternAr,
+							translation: `Lantern ${englishRuns}`,
+						},
+					]
+				: [];
+		await route.fulfill({
+			status: 200,
+			contentType: "application/json",
+			body: JSON.stringify({ output: JSON.stringify(answer) }),
+		});
+	});
+	await page.goto(`/translations?novel=${novels[0]?.id}`);
+	await page.getByRole("button", { name: "Suggest page" }).click();
+	const mira = page.getByRole("textbox", { name: "English name for ميرا" });
+	const lantern = page.getByRole("textbox", {
+		name: "English name for الفانوس",
+	});
+	await expect(mira).toHaveValue("Mira 1");
+	await expect(lantern).toHaveValue("Lantern 1");
+	await mira.fill("My Mira");
+	await page.getByRole("button", { name: "Re-suggest page" }).click();
+	await expect(lantern).toHaveValue("Lantern 2");
+	await expect(mira).toHaveValue("My Mira");
+});
+
 test("a novel row opens its profile with characters in the chosen language", async ({
 	page,
 }) => {
@@ -625,6 +670,35 @@ test("an alias's translation is edited on the novel profile", async ({
 			body: expect.objectContaining({
 				name: "Mira Vale",
 				nameAr: "ميرا فيل",
+				nameEn: "Mira Vale",
+			}),
+		}),
+	);
+});
+
+test("changing an alias's primary language keeps each translation in its own field", async ({
+	page,
+}) => {
+	const profileKeywords = structuredClone(keywordDetails);
+	const alias = profileKeywords[0]?.aliases[0];
+	if (!alias) throw new Error("Missing alias fixture");
+	alias.nameAr = "ميرا فيل";
+	alias.nameEn = "Mira Vale";
+	const requests = await mockApi(page, { signedIn: true, profileKeywords });
+	await page.goto(`/novels/${novels[0]?.id}`);
+	await page.getByRole("button", { name: "Edit alias Mira Vale" }).click();
+	const dialog = page.getByRole("dialog", { name: "Edit alias" });
+	await dialog.getByLabel("Alias name").fill("ميرا الجديدة");
+	await expect(dialog.getByLabel("English name")).toHaveValue("Mira Vale");
+	await dialog.getByRole("button", { name: "Save changes" }).click();
+	await expect(page.getByText("Alias updated")).toBeVisible();
+	expect(requests).toContainEqual(
+		expect.objectContaining({
+			method: "PUT",
+			path: "/api/admin/keyword-aliases/alias-mira-vale",
+			body: expect.objectContaining({
+				name: "ميرا الجديدة",
+				nameAr: "ميرا الجديدة",
 				nameEn: "Mira Vale",
 			}),
 		}),

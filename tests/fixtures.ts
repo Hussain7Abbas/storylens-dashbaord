@@ -288,8 +288,8 @@ export const keywordDetails = [
 				keywordId: KEYWORD_IDS.mira,
 				name: "Mira Vale",
 				// Added before aliases had language names: `name` stands for English.
-				nameAr: null,
-				nameEn: null,
+				nameAr: null as string | null,
+				nameEn: null as string | null,
 				description: null,
 				matchingType: "FULL",
 				overrideStyle: false,
@@ -381,6 +381,7 @@ export async function mockApi(
 		signedIn?: boolean;
 		permissions?: string[];
 		keywords?: typeof keywords;
+		profileKeywords?: typeof keywordDetails;
 	} = {},
 ) {
 	const user = adminUser(options.permissions);
@@ -528,7 +529,7 @@ export async function mockApi(
 		if (path === "/api/admin/novels/")
 			return json(route, { data: novels, total: novels.length });
 		if (path === `/api/admin/novels/${NOVEL_ID}/keywords`)
-			return json(route, { data: keywordDetails });
+			return json(route, { data: options.profileKeywords ?? keywordDetails });
 		if (path === `/api/admin/novels/${NOVEL_ID}`) return json(route, novels[0]);
 		if (path === "/api/admin/keyword-categories/")
 			return json(route, { data: categories });

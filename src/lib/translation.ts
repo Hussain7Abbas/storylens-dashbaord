@@ -24,9 +24,8 @@ export function otherLanguage(language: Language): Language {
 	return language === "ar" ? "en" : "ar";
 }
 
-const ARABIC_LETTER =
-	/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
-const LATIN_LETTER = /[A-Za-z\u00C0-\u024F]/;
+const ARABIC_LETTER = /(?=\p{L})\p{Script=Arabic}/u;
+const LATIN_LETTER = /(?=\p{L})\p{Script=Latin}/u;
 
 /** The language a name is written in, from its script; null when it has no letters. */
 export function scriptLanguage(text: string): Language | null {

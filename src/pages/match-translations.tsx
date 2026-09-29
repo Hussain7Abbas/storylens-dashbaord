@@ -264,6 +264,8 @@ export function MatchTranslationsPage() {
 	};
 
 	const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+	// AI may replace its own earlier draft on re-suggest, but never an admin edit.
+	const manuallyEdited = useRef(new Set<string>());
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [suggestions, setSuggestions] = useState<
 		Record<string, TranslationSuggestion>
@@ -292,11 +294,13 @@ export function MatchTranslationsPage() {
 	);
 
 	const draftOf = (id: string): Draft => drafts[id] ?? EMPTY_DRAFT;
-	const updateDraft = (id: string, patch: Partial<Draft>) =>
+	const updateDraft = (id: string, patch: Partial<Draft>) => {
+		manuallyEdited.current.add(id);
 		setDrafts((current) => ({
 			...current,
 			[id]: { ...(current[id] ?? EMPTY_DRAFT), ...patch },
 		}));
+	};
 
 	// AI suggestions run only when asked; cancelling aborts the request, which
 	// makes the desktop client stop the model instead of finishing unseen.
@@ -353,7 +357,7 @@ export function MatchTranslationsPage() {
 					setDrafts((current) => {
 						const next = { ...current };
 						for (const [id, suggestion] of answer) {
-							if (next[id]) continue;
+							if (manuallyEdited.current.has(id)) continue;
 							const match = suggestion.matchId
 								? matches.get(suggestion.matchId)
 								: undefined;
