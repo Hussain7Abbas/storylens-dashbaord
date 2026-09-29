@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { errorMessage } from "@/api/axios-instance";
 import {
 	getGetKeywordsQueryKey,
-	getKeywords,
 	postKeywordsByIdAlias,
 	postKeywordsByIdLink,
 	postKeywordsByIdVersion,
@@ -39,13 +38,15 @@ import {
 	loadDesktopSettings,
 	saveDesktopSettings,
 } from "@/lib/desktop-client";
+import { novelKeywordsQuery } from "@/lib/novel-keywords";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
 	bothNames,
+	isMisfiled,
 	LANGUAGE_LABELS,
 	type Language,
-	missingLanguage,
-	nameIn,
+	namesByScript,
+	singleName,
 } from "@/lib/translation";
 import {
 	buildTranslationPrompt,
@@ -72,18 +73,12 @@ type AiState =
 	| { status: "error"; message: string };
 
 const PAGE_SIZE = 50;
-const CANDIDATE_PAGE_SIZE = 100;
-const MAX_CANDIDATE_PAGES = 4;
 const EMPTY_DRAFT: Draft = {
 	translation: "",
 	link: null,
 	alias: null,
 	version: null,
 };
-
-function otherLanguage(language: Language): Language {
-	return language === "ar" ? "en" : "ar";
-}
 
 function relationOf(draft: Draft): Relation | null {
 	if (draft.link) return "link";
@@ -93,24 +88,36 @@ function relationOf(draft: Draft): Relation | null {
 }
 
 /** Keywords named only in `target`: the ones a `target`-less keyword may be linked to. */
-async function loadCandidates(
-	novelId: string,
+function candidatesIn(
+	keywords: Keyword[],
 	target: Language,
-): Promise<TranslationCandidate[]> {
-	const candidates: TranslationCandidate[] = [];
-	for (let page = 1; page <= MAX_CANDIDATE_PAGES; page++) {
-		const data = await getKeywords({
-			novelId,
-			has: target,
-			missing: otherLanguage(target),
-			page,
-			pageSize: CANDIDATE_PAGE_SIZE,
-		});
-		for (const keyword of data.data)
-			candidates.push({ id: keyword.id, name: nameIn(keyword, target) ?? "" });
-		if (candidates.length >= data.total || data.data.length === 0) break;
-	}
-	return candidates;
+): (TranslationCandidate & { keyword: Keyword })[] {
+	return keywords.flatMap((keyword) => {
+		const single = singleName(keyword);
+		return single?.source === target
+			? [{ id: keyword.id, name: single.name, keyword }]
+			: [];
+	});
+}
+
+function toPicked(keyword: Keyword): PickedKeyword {
+	return {
+		id: keyword.id,
+		label: bothNames(keyword),
+		nameAr: keyword.nameAr,
+		nameEn: keyword.nameEn,
+	};
+}
+
+/** Moves a lone name stored in the other language's column into its own. */
+async function fileByScript(keyword: {
+	id: string;
+	nameAr: string | null;
+	nameEn: string | null;
+}) {
+	if (!isMisfiled(keyword)) return;
+	const names = namesByScript(keyword);
+	await putKeywordsById(keyword.id, { nameAr: names.ar, nameEn: names.en });
 }
 
 function DesktopClientSettings({
@@ -276,7 +283,7 @@ export function MatchTranslationsPage() {
 	const rows = useMemo(
 		() =>
 			(keywords.data?.data ?? []).filter(
-				(keyword) => !ignored.has(keyword.id) && missingLanguage(keyword),
+				(keyword) => !ignored.has(keyword.id) && singleName(keyword),
 			),
 		[keywords.data, ignored],
 	);
@@ -296,19 +303,20 @@ export function MatchTranslationsPage() {
 			const run = ++aiRun.current;
 			setAi({ status: "running" });
 			try {
+				const all = await queryClient.fetchQuery(novelKeywordsQuery(novelId));
 				for (const target of ["en", "ar"] as const) {
 					const sources = targets.filter(
-						(keyword) => missingLanguage(keyword) === target,
+						(keyword) => singleName(keyword)?.target === target,
 					);
 					if (sources.length === 0) continue;
-					const candidates = await loadCandidates(novelId, target);
+					const candidates = candidatesIn(all, target);
 					const prompt = buildTranslationPrompt({
 						novelName: novel ? bothNames(novel) : "",
 						target,
 						candidates,
 						sources: sources.map((keyword) => ({
 							id: keyword.id,
-							name: nameIn(keyword, otherLanguage(target)) ?? "",
+							name: singleName(keyword)?.name ?? "",
 							description: keyword.description,
 							aliases: keyword.aliases,
 						})),
@@ -319,8 +327,8 @@ export function MatchTranslationsPage() {
 						new Set(candidates.map((candidate) => candidate.id)),
 					);
 					if (run !== aiRun.current) return;
-					const names = new Map(
-						candidates.map((candidate) => [candidate.id, candidate.name]),
+					const matches = new Map(
+						candidates.map((candidate) => [candidate.id, candidate.keyword]),
 					);
 					setSuggestions((current) => ({
 						...current,
@@ -331,15 +339,13 @@ export function MatchTranslationsPage() {
 						const next = { ...current };
 						for (const [id, suggestion] of answer) {
 							if (next[id]) continue;
+							const match = suggestion.matchId
+								? matches.get(suggestion.matchId)
+								: undefined;
 							next[id] = {
 								...EMPTY_DRAFT,
 								translation: suggestion.translation,
-								link: suggestion.matchId
-									? {
-											id: suggestion.matchId,
-											label: names.get(suggestion.matchId) ?? "",
-										}
-									: null,
+								link: match ? toPicked(match) : null,
 							};
 						}
 						return next;
@@ -354,7 +360,7 @@ export function MatchTranslationsPage() {
 					});
 			}
 		},
-		[novelId, novel, settings],
+		[novelId, novel, settings, queryClient],
 	);
 
 	// Each row is sent to the AI once automatically; Retry and Re-suggest ask again.
@@ -385,8 +391,8 @@ export function MatchTranslationsPage() {
 
 	const saveRow = async (keyword: Keyword): Promise<boolean> => {
 		const draft = draftOf(keyword.id);
-		const target = missingLanguage(keyword);
-		if (!target) return true;
+		const single = singleName(keyword);
+		if (!single) return true;
 		setErrors((current) => {
 			const next = { ...current };
 			delete next[keyword.id];
@@ -395,6 +401,15 @@ export function MatchTranslationsPage() {
 		setSaving((current) => new Set(current).add(keyword.id));
 		try {
 			if (draft.link) {
+				// Linking merges names by column, so both must be in the right one.
+				const taken = namesByScript(draft.link)[single.source];
+				if (taken && taken !== single.name) {
+					throw new Error(
+						`“${draft.link.label}” already has the ${LANGUAGE_LABELS[single.source]} name “${taken}”. Use Alias of or Version of instead.`,
+					);
+				}
+				await fileByScript(keyword);
+				await fileByScript(draft.link);
 				await postKeywordsByIdLink(keyword.id, { targetId: draft.link.id });
 			} else if (draft.alias) {
 				await postKeywordsByIdAlias(keyword.id, { targetId: draft.alias.id });
@@ -406,12 +421,16 @@ export function MatchTranslationsPage() {
 				const translation = draft.translation.trim();
 				if (!translation) {
 					throw new Error(
-						`Enter the ${LANGUAGE_LABELS[target]} name or pick a link, alias or version.`,
+						`Enter the ${LANGUAGE_LABELS[single.target]} name or pick a link, alias or version.`,
 					);
 				}
-				await putKeywordsById(keyword.id, {
-					[target === "ar" ? "nameAr" : "nameEn"]: translation,
-				});
+				// Both names, so a lone name filed under the wrong language moves too.
+				await putKeywordsById(
+					keyword.id,
+					single.target === "ar"
+						? { nameAr: translation, nameEn: single.name }
+						: { nameAr: single.name, nameEn: translation },
+				);
 			}
 			setSelected((current) => {
 				const next = new Set(current);
@@ -620,11 +639,13 @@ export function MatchTranslationsPage() {
 									</thead>
 									<tbody>
 										{rows.map((keyword) => {
-											const target = missingLanguage(keyword) ?? "en";
-											const source = otherLanguage(target);
+											const { name, source, target } = singleName(keyword) ?? {
+												name: "",
+												source: "ar",
+												target: "en",
+											};
 											const draft = draftOf(keyword.id);
 											const relation = relationOf(draft);
-											const name = nameIn(keyword, source) ?? "";
 											const suggestion = suggestions[keyword.id];
 											const busy = saving.has(keyword.id);
 											return (
@@ -655,8 +676,9 @@ export function MatchTranslationsPage() {
 																{LANGUAGE_LABELS[source]} →{" "}
 																{LANGUAGE_LABELS[target]}
 															</span>
-															{keyword.aliases.length > 0 &&
-																`aka ${keyword.aliases.join(", ")}`}
+															{keyword.aliases.length > 0 && (
+																<span>aka {keyword.aliases.join(", ")}</span>
+															)}
 														</p>
 														{keyword.description && (
 															<p className="mt-1 line-clamp-2 max-w-72 text-xs text-muted">
@@ -694,9 +716,8 @@ export function MatchTranslationsPage() {
 														<KeywordPicker
 															novelId={novelId}
 															excludeId={keyword.id}
-															filter={{ has: target, missing: source }}
 															label={`Link ${name} to its ${LANGUAGE_LABELS[target]} keyword`}
-															placeholder={`${LANGUAGE_LABELS[target]} keyword…`}
+															placeholder="Search keywords…"
 															value={draft.link}
 															disabled={
 																relation !== null && relation !== "link"

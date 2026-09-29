@@ -1,6 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { KEYWORD_IDS, mockApi, mockDesktopClient, novels } from "./fixtures";
+import {
+	KEYWORD_IDS,
+	keywords,
+	mockApi,
+	mockDesktopClient,
+	novels,
+} from "./fixtures";
 
 async function expectAccessible(page: import("@playwright/test").Page) {
 	const results = await new AxeBuilder({ page })
@@ -9,6 +15,23 @@ async function expectAccessible(page: import("@playwright/test").Page) {
 	expect(
 		results.violations.map((violation) => `${violation.id}: ${violation.help}`),
 	).toEqual([]);
+}
+
+/** Rewrites text like Google Translate: each text node becomes <font> wrappers. */
+async function translatePage(scope: import("@playwright/test").Locator) {
+	await scope.evaluate((root) => {
+		const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+		const texts: Text[] = [];
+		while (walker.nextNode()) texts.push(walker.currentNode as Text);
+		for (const text of texts) {
+			if (!text.nodeValue?.trim()) continue;
+			const outer = document.createElement("font");
+			const inner = document.createElement("font");
+			inner.textContent = text.nodeValue;
+			outer.append(inner);
+			text.replaceWith(outer);
+		}
+	});
 }
 
 test("signed-out visitors land on sign-in, which offers no registration", async ({
@@ -103,6 +126,36 @@ test("one new user can get both reader and dashboard access", async ({
 	});
 });
 
+test("signing in survives a page translator rewriting the form", async ({
+	page,
+}) => {
+	await mockApi(page);
+	await page.goto("/login");
+	await page.getByLabel("Email").fill("admin@storylens.local");
+	await page.getByLabel("Password").fill("correct-password");
+	await translatePage(page.locator("body"));
+	await page.getByRole("button", { name: "Sign in" }).click();
+	await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+	await expect(page.getByText("Unexpected Application Error")).toHaveCount(0);
+});
+
+test("saving survives a page translator rewriting button labels", async ({
+	page,
+}) => {
+	await mockApi(page, { signedIn: true });
+	await page.goto("/users");
+	await page.getByRole("button", { name: "Edit mira" }).click();
+	const dialog = page.getByRole("dialog", { name: "Edit user" });
+	await dialog.getByLabel("Display name").fill("Mira V.");
+	await translatePage(dialog);
+	await dialog.getByRole("button", { name: "Save changes" }).click();
+	await expect(
+		page.getByRole("status").filter({ hasText: "User updated" }),
+	).toBeVisible();
+	await expect(page.getByText("Unexpected Application Error")).toHaveCount(0);
+	await expect(page.getByRole("heading", { name: "Users" })).toBeVisible();
+});
+
 test("the list shows each account's access and roles", async ({ page }) => {
 	await mockApi(page, { signedIn: true });
 	await page.goto("/users");
@@ -177,7 +230,7 @@ test("match translations suggests names and saves a row, a link and a bulk selec
 	expect(requests).toContainEqual({
 		method: "PUT",
 		path: `/api/admin/keywords/${KEYWORD_IDS.mira}`,
-		body: { nameEn: "Mira" },
+		body: { nameAr: "ميرا", nameEn: "Mira" },
 	});
 
 	await page.getByRole("checkbox", { name: "Select الفانوس" }).check();
@@ -192,9 +245,85 @@ test("match translations suggests names and saves a row, a link and a bulk selec
 	expect(requests).toContainEqual({
 		method: "PUT",
 		path: `/api/admin/keywords/${KEYWORD_IDS.lanternEn}`,
-		body: { nameAr: "الفانوس" },
+		body: { nameAr: "الفانوس", nameEn: "The Lantern" },
 	});
 
 	const results = await new AxeBuilder({ page }).analyze();
 	expect(results.violations).toEqual([]);
+});
+
+test("the link picker fuzzy-searches keywords in both languages", async ({
+	page,
+}) => {
+	await mockApi(page, { signedIn: true });
+	await page.goto(`/translations?novel=${novels[0]?.id}`);
+	const link = page.getByRole("combobox", {
+		name: "Link ميرا to its English keyword",
+	});
+	// A typo still finds the English keyword.
+	await link.fill("lantren");
+	await expect(
+		page.getByRole("option", { name: "The Lantern", exact: true }),
+	).toBeVisible();
+	// Arabic keywords are searchable too, by a word inside the name.
+	await link.fill("فانوس");
+	await expect(
+		page.getByRole("option", { name: "الفانوس", exact: true }),
+	).toBeVisible();
+	await link.fill("zzzz");
+	await expect(page.getByText("No matching keywords")).toBeVisible();
+
+	await link.fill("the lantern");
+	await page.getByRole("option", { name: "The Lantern", exact: true }).click();
+	await expect(
+		page.getByRole("combobox", { name: "Make ميرا an alias of" }),
+	).toBeDisabled();
+	await expect(
+		page.getByRole("combobox", { name: "Make ميرا a version of" }),
+	).toBeDisabled();
+	await expect(
+		page.getByRole("textbox", { name: "English name for ميرا" }),
+	).toBeDisabled();
+});
+
+test("an English name stored as Arabic asks for the Arabic name and is refiled on save", async ({
+	page,
+}) => {
+	const misfiled = {
+		id: "55555555-5555-4555-8555-555555555555",
+		novelId: novels[0]?.id ?? "",
+		nameAr: "Bull Demon",
+		nameEn: null,
+		description: null,
+		aliases: [],
+	};
+	const requests = await mockApi(page, {
+		signedIn: true,
+		keywords: [...keywords, misfiled],
+	});
+	await page.goto(`/translations?novel=${novels[0]?.id}`);
+	const row = page
+		.getByRole("row")
+		.filter({ has: page.getByRole("checkbox", { name: "Select Bull Demon" }) });
+	await expect(row.getByText("English → Arabic")).toBeVisible();
+	const input = row.getByRole("textbox", {
+		name: "Arabic name for Bull Demon",
+	});
+	await expect(input).toHaveAttribute("placeholder", "Arabic name");
+	await input.fill("شيطان الثور");
+	await row.getByRole("button", { name: "Save" }).click();
+	await expect(page.getByText("Row saved")).toBeVisible();
+	expect(requests).toContainEqual({
+		method: "PUT",
+		path: `/api/admin/keywords/${misfiled.id}`,
+		body: { nameAr: "شيطان الثور", nameEn: "Bull Demon" },
+	});
+});
+
+test("the desktop client port defaults to the client's port", async ({
+	page,
+}) => {
+	await mockApi(page, { signedIn: true });
+	await page.goto(`/translations?novel=${novels[0]?.id}`);
+	await expect(page.getByLabel("Port")).toHaveValue("43127");
 });

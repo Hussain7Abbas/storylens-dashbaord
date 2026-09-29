@@ -24,8 +24,11 @@ export type DesktopCapabilities = {
 	models: DesktopModel[];
 };
 
+/** The desktop client's default port (`apps/client` `src/config.ts`). */
+export const DEFAULT_PORT = 43127;
+
 const DEFAULT_SETTINGS: DesktopSettings = {
-	port: 0,
+	port: DEFAULT_PORT,
 	token: "",
 	model: "",
 	effort: "",
@@ -35,7 +38,12 @@ export function loadDesktopSettings(): DesktopSettings {
 	try {
 		const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
 		return stored && typeof stored === "object"
-			? { ...DEFAULT_SETTINGS, ...stored }
+			? {
+					...DEFAULT_SETTINGS,
+					...stored,
+					// Saved before the default existed, or with the field left empty.
+					port: stored.port || DEFAULT_PORT,
+				}
 			: DEFAULT_SETTINGS;
 	} catch {
 		return DEFAULT_SETTINGS;

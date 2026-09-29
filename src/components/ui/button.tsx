@@ -29,7 +29,9 @@ export function Button({
 			{...props}
 		>
 			{loading ? <Spinner /> : icon}
-			{children}
+			{/* The span keeps the label a stable element: page translators swap
+			    bare text nodes, and React then fails to insert the spinner before it. */}
+			{children != null && children !== false && <span>{children}</span>}
 		</button>
 	);
 }

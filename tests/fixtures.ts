@@ -231,9 +231,14 @@ export async function mockDesktopClient(page: Page) {
 /** Mocks the dashboard API; `signedIn` seeds a stored session token. */
 export async function mockApi(
 	page: Page,
-	options: { signedIn?: boolean; permissions?: string[] } = {},
+	options: {
+		signedIn?: boolean;
+		permissions?: string[];
+		keywords?: typeof keywords;
+	} = {},
 ) {
 	const user = adminUser(options.permissions);
+	const keywordList = options.keywords ?? keywords;
 	const requests: { method: string; path: string; body: unknown }[] = [];
 
 	if (options.signedIn) {
@@ -344,6 +349,20 @@ export async function mockApi(
 				updatedAt: now,
 			});
 		}
+		if (path.startsWith("/api/admin/users/") && method === "PUT") {
+			const body = request.postDataJSON() as Record<string, unknown>;
+			return json(route, {
+				...body,
+				id: path.split("/").at(-1),
+				emailVerified: true,
+				image: null,
+				isGuest: false,
+				userRole: null,
+				adminRole: null,
+				createdAt: now,
+				updatedAt: now,
+			});
+		}
 		if (path === "/api/admin/roles/") return json(route, { data: roles });
 		if (path.startsWith("/api/admin/roles/") && method === "GET") {
 			const role = roles.find((item) => path.endsWith(item.id));
@@ -366,12 +385,12 @@ export async function mockApi(
 			// Untranslated rows, or link candidates named only in English.
 			const data =
 				url.searchParams.get("has") === "en"
-					? keywords.filter((keyword) => keyword.nameEn && !keyword.nameAr)
-					: keywords;
+					? keywordList.filter((keyword) => keyword.nameEn && !keyword.nameAr)
+					: keywordList;
 			return json(route, { data, total: data.length });
 		}
 		if (path.startsWith("/api/admin/keywords/") && method !== "GET") {
-			const keyword = keywords.find((item) => path.includes(item.id));
+			const keyword = keywordList.find((item) => path.includes(item.id));
 			return json(route, { ...keyword, ...(request.postDataJSON() as object) });
 		}
 		if (path === "/api/admin/configs/") return json(route, { data: [] });
