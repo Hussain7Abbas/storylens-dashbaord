@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import { Check, EyeOff, RefreshCw, Sparkles } from "lucide-react";
+import { Check, CircleStop, EyeOff, RefreshCw, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { errorMessage } from "@/api/axios-instance";
 import {
@@ -295,11 +295,22 @@ export function MatchTranslationsPage() {
 			[id]: { ...(current[id] ?? EMPTY_DRAFT), ...patch },
 		}));
 
-	// AI suggestions for the rows on this page that have none yet.
+	// AI suggestions run only when asked; cancelling aborts the request, which
+	// makes the desktop client stop the model instead of finishing unseen.
 	const aiRun = useRef(0);
+	const aiAbort = useRef<AbortController | null>(null);
+	const stopSuggesting = useCallback(() => {
+		aiRun.current++;
+		aiAbort.current?.abort();
+		aiAbort.current = null;
+		setAi({ status: "idle" });
+	}, []);
 	const suggest = useCallback(
 		async (targets: Keyword[]) => {
 			if (!novelId || !isReady(settings) || targets.length === 0) return;
+			aiAbort.current?.abort();
+			const controller = new AbortController();
+			aiAbort.current = controller;
 			const run = ++aiRun.current;
 			setAi({ status: "running" });
 			try {
@@ -322,7 +333,7 @@ export function MatchTranslationsPage() {
 						})),
 					});
 					const answer = parseTranslationAnswer(
-						await executePrompt(settings, prompt, target),
+						await executePrompt(settings, prompt, target, controller.signal),
 						new Set(sources.map((keyword) => keyword.id)),
 						new Set(candidates.map((candidate) => candidate.id)),
 					);
@@ -353,32 +364,36 @@ export function MatchTranslationsPage() {
 				}
 				if (run === aiRun.current) setAi({ status: "idle" });
 			} catch (reason) {
-				if (run === aiRun.current)
+				// A cancelled run already went back to idle.
+				if (run === aiRun.current && !controller.signal.aborted)
 					setAi({
 						status: "error",
 						message: reason instanceof Error ? reason.message : String(reason),
 					});
+			} finally {
+				if (aiAbort.current === controller) aiAbort.current = null;
 			}
 		},
 		[novelId, novel, settings, queryClient],
 	);
 
-	// Each row is sent to the AI once automatically; Retry and Re-suggest ask again.
-	const [attempted, setAttempted] = useState<Set<string>>(new Set());
-	const pending = useMemo(
-		() => rows.filter((keyword) => !attempted.has(keyword.id)),
-		[rows, attempted],
-	);
+	// Changing novel or page, or leaving, stops a running suggestion.
+	const pageKey = `${novelId}:${page}`;
+	const suggestedFor = useRef(pageKey);
 	useEffect(() => {
-		if (!isReady(settings) || pending.length === 0 || ai.status === "running")
-			return;
-		setAttempted(
-			(current) =>
-				new Set([...current, ...pending.map((keyword) => keyword.id)]),
-		);
-		void suggest(pending);
-	}, [pending, suggest, settings, ai.status]);
+		if (suggestedFor.current === pageKey) return;
+		suggestedFor.current = pageKey;
+		stopSuggesting();
+	}, [pageKey, stopSuggesting]);
+	useEffect(
+		() => () => {
+			aiRun.current++;
+			aiAbort.current?.abort();
+		},
+		[],
+	);
 	const unsuggested = rows.filter((keyword) => !suggestions[keyword.id]);
+	const suggestedOnPage = rows.some((keyword) => suggestions[keyword.id]);
 
 	const selectedOnPage = rows.filter((keyword) => selected.has(keyword.id));
 	const allSelected = rows.length > 0 && selectedOnPage.length === rows.length;
@@ -525,22 +540,36 @@ export function MatchTranslationsPage() {
 										Suggesting translations…
 									</output>
 								)}
-								<Button
-									icon={<Sparkles size={16} strokeWidth={1.75} aria-hidden />}
-									disabled={!isReady(settings) || ai.status === "running"}
-									title={
-										isReady(settings)
-											? "Ask the AI again for this page"
-											: "Pair the desktop client first"
-									}
-									onClick={() => {
-										setSuggestions({});
-										setAi({ status: "idle" });
-										void suggest(rows);
-									}}
-								>
-									Re-suggest page
-								</Button>
+								{ai.status === "running" ? (
+									<Button
+										icon={
+											<CircleStop size={16} strokeWidth={1.75} aria-hidden />
+										}
+										title="Stop the AI request for this page"
+										onClick={stopSuggesting}
+									>
+										Cancel suggesting
+									</Button>
+								) : (
+									<Button
+										icon={<Sparkles size={16} strokeWidth={1.75} aria-hidden />}
+										disabled={!isReady(settings) || rows.length === 0}
+										title={
+											!isReady(settings)
+												? "Pair the desktop client first"
+												: suggestedOnPage
+													? "Ask the AI again for this page"
+													: "Ask the AI for this page’s missing names"
+										}
+										onClick={() => {
+											setSuggestions({});
+											setAi({ status: "idle" });
+											void suggest(rows);
+										}}
+									>
+										{suggestedOnPage ? "Re-suggest page" : "Suggest page"}
+									</Button>
+								)}
 								<Button
 									variant="primary"
 									icon={<Check size={16} strokeWidth={1.75} aria-hidden />}

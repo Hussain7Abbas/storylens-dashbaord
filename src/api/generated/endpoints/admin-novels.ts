@@ -34,6 +34,9 @@ import type {
   GetNovelsById200,
   GetNovelsById404,
   GetNovelsById500,
+  GetNovelsByIdKeywords200,
+  GetNovelsByIdKeywords404,
+  GetNovelsByIdKeywords500,
   GetNovelsParams,
   PostNovels200,
   PostNovels404,
@@ -430,4 +433,95 @@ export const useDeleteNovelsById = <TError = ErrorType<DeleteNovelsById404 | Del
 
       return useMutation(mutationOptions, queryClient);
     }
+    /**
+ * @summary List a novel’s keywords with their versions and aliases
+ */
+export const getNovelsByIdKeywords = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<GetNovelsByIdKeywords200>(
+      {url: `/api/admin/novels/${id}/keywords`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetNovelsByIdKeywordsQueryKey = (id?: string,) => {
+    return [
+    `/api/admin/novels/${id}/keywords`
+    ] as const;
+    }
+
     
+export const getGetNovelsByIdKeywordsQueryOptions = <TData = Awaited<ReturnType<typeof getNovelsByIdKeywords>>, TError = ErrorType<GetNovelsByIdKeywords404 | GetNovelsByIdKeywords500>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNovelsByIdKeywords>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNovelsByIdKeywordsQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNovelsByIdKeywords>>> = ({ signal }) => getNovelsByIdKeywords(id, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNovelsByIdKeywords>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetNovelsByIdKeywordsQueryResult = NonNullable<Awaited<ReturnType<typeof getNovelsByIdKeywords>>>
+export type GetNovelsByIdKeywordsQueryError = ErrorType<GetNovelsByIdKeywords404 | GetNovelsByIdKeywords500>
+
+
+export function useGetNovelsByIdKeywords<TData = Awaited<ReturnType<typeof getNovelsByIdKeywords>>, TError = ErrorType<GetNovelsByIdKeywords404 | GetNovelsByIdKeywords500>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNovelsByIdKeywords>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNovelsByIdKeywords>>,
+          TError,
+          Awaited<ReturnType<typeof getNovelsByIdKeywords>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNovelsByIdKeywords<TData = Awaited<ReturnType<typeof getNovelsByIdKeywords>>, TError = ErrorType<GetNovelsByIdKeywords404 | GetNovelsByIdKeywords500>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNovelsByIdKeywords>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNovelsByIdKeywords>>,
+          TError,
+          Awaited<ReturnType<typeof getNovelsByIdKeywords>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNovelsByIdKeywords<TData = Awaited<ReturnType<typeof getNovelsByIdKeywords>>, TError = ErrorType<GetNovelsByIdKeywords404 | GetNovelsByIdKeywords500>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNovelsByIdKeywords>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List a novel’s keywords with their versions and aliases
+ */
+
+export function useGetNovelsByIdKeywords<TData = Awaited<ReturnType<typeof getNovelsByIdKeywords>>, TError = ErrorType<GetNovelsByIdKeywords404 | GetNovelsByIdKeywords500>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNovelsByIdKeywords>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetNovelsByIdKeywordsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+

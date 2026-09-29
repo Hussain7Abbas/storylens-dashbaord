@@ -1,7 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { BookOpen, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
+import { BookOpen, Pencil, Plus, Trash2, X } from "lucide-react";
 import { type FormEvent, type KeyboardEvent, useState } from "react";
-import { axiosInstance, errorMessage } from "@/api/axios-instance";
+import { Link, useNavigate } from "react-router";
+import { errorMessage } from "@/api/axios-instance";
 import {
 	getGetNovelsQueryKey,
 	useDeleteNovelsById,
@@ -9,14 +10,12 @@ import {
 	usePostNovels,
 	usePutNovelsById,
 } from "@/api/generated/endpoints/admin-novels";
-import type {
-	GetNovels200DataItem,
-	PostFilesUpload200,
-} from "@/api/generated/schemas";
+import type { GetNovels200DataItem } from "@/api/generated/schemas";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Dialog } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
+import { ImageField } from "@/components/ui/image-field";
 import {
 	EmptyState,
 	ErrorState,
@@ -34,17 +33,6 @@ import { useSearchState } from "@/lib/use-search-state";
 
 type Novel = GetNovels200DataItem;
 const PAGE_SIZE = 20;
-const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-
-async function uploadImage(file: File): Promise<PostFilesUpload200> {
-	const body = new FormData();
-	body.append("file", file);
-	const { data } = await axiosInstance.post<PostFilesUpload200>(
-		"/api/admin/files/upload",
-		body,
-	);
-	return data;
-}
 
 function SlugInput({
 	slugs,
@@ -108,7 +96,6 @@ function NovelForm({
 	novel: Novel | null;
 	onDone: () => void;
 }) {
-	const { can } = useAuth();
 	const queryClient = useQueryClient();
 	const toast = useToast();
 	const [values, setValues] = useState({
@@ -134,24 +121,6 @@ function NovelForm({
 	const create = usePostNovels({ mutation: { onSuccess, onError } });
 	const update = usePutNovelsById({ mutation: { onSuccess, onError } });
 
-	const pickImage = async (file: File | undefined) => {
-		if (!file) return;
-		if (!file.type.startsWith("image/"))
-			return setError("Choose an image file.");
-		if (file.size > MAX_IMAGE_BYTES)
-			return setError("Images must be 8 MB or smaller.");
-		setError("");
-		setUploading(true);
-		try {
-			const uploaded = await uploadImage(file);
-			setImage({ id: uploaded.id, url: uploaded.url });
-		} catch (reason) {
-			setError(errorMessage(reason, "The image could not be uploaded."));
-		} finally {
-			setUploading(false);
-		}
-	};
-
 	const submit = (event: FormEvent) => {
 		event.preventDefault();
 		setError("");
@@ -175,50 +144,12 @@ function NovelForm({
 
 	return (
 		<form onSubmit={submit} className="grid gap-4">
-			<div className="flex items-start gap-4">
-				<div className="grid size-24 shrink-0 place-items-center overflow-hidden rounded-xl border border-line bg-wash">
-					{image ? (
-						<img
-							src={image.url}
-							alt="Cover"
-							className="size-full object-cover"
-						/>
-					) : (
-						<ImagePlus
-							size={22}
-							strokeWidth={1.75}
-							className="text-muted"
-							aria-hidden
-						/>
-					)}
-				</div>
-				<div className="space-y-2 text-sm">
-					<p className="font-semibold">Cover image</p>
-					{can(PERMISSIONS.novels.upload) ? (
-						<div className="flex flex-wrap gap-2">
-							<label
-								className={`btn btn-secondary ${uploading ? "pointer-events-none opacity-60" : ""}`}
-							>
-								{uploading ? "Uploading…" : image ? "Replace" : "Upload"}
-								<input
-									type="file"
-									accept="image/*"
-									className="sr-only"
-									disabled={uploading}
-									onChange={(event) => void pickImage(event.target.files?.[0])}
-								/>
-							</label>
-							{image && (
-								<Button variant="ghost" onClick={() => setImage(null)}>
-									Remove
-								</Button>
-							)}
-						</div>
-					) : (
-						<p className="text-muted">Your role can’t upload images.</p>
-					)}
-				</div>
-			</div>
+			<ImageField
+				label="Cover image"
+				value={image}
+				onChange={setImage}
+				onUploadingChange={setUploading}
+			/>
 			<div className="grid gap-4 sm:grid-cols-2">
 				<Field
 					label="Arabic name"
@@ -321,6 +252,8 @@ function NovelForm({
 
 export function NovelsPage() {
 	const { can } = useAuth();
+	const navigate = useNavigate();
+	const canOpen = can(PERMISSIONS.novels.view);
 	const toast = useToast();
 	const queryClient = useQueryClient();
 	const { values, page, set } = useSearchState(["search", "sort"] as const);
@@ -421,7 +354,17 @@ export function NovelsPage() {
 								</thead>
 								<tbody>
 									{novels.data.data.map((novel) => (
-										<tr key={novel.id}>
+										<tr
+											key={novel.id}
+											className={canOpen ? "cursor-pointer" : undefined}
+											// The name link is the keyboard path; the whole row is a larger mouse target.
+											onClick={(event) => {
+												if (!canOpen) return;
+												if ((event.target as HTMLElement).closest("a, button"))
+													return;
+												navigate(`/novels/${novel.id}`);
+											}}
+										>
 											<td>
 												<div className="flex items-center gap-3">
 													<div className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-lg border border-line bg-wash text-muted">
@@ -444,7 +387,16 @@ export function NovelsPage() {
 													</div>
 													<div className="min-w-0">
 														<p className="font-medium capitalize">
-															{bothNames(novel)}
+															{canOpen ? (
+																<Link
+																	to={`/novels/${novel.id}`}
+																	className="hover:text-accent"
+																>
+																	{bothNames(novel)}
+																</Link>
+															) : (
+																bothNames(novel)
+															)}
 														</p>
 														<p className="flex flex-wrap items-center gap-2 text-xs text-muted">
 															{novel.slugs.length > 0

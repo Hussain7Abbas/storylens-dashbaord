@@ -16,15 +16,27 @@ export const ALL_PERMISSIONS = [
 	"DELETE /api/admin/roles/:id",
 	"GET /api/admin/permissions/",
 	"GET /api/admin/novels/",
+	"GET /api/admin/novels/:id",
+	"GET /api/admin/novels/:id/keywords",
 	"POST /api/admin/novels/",
 	"PUT /api/admin/novels/:id",
 	"DELETE /api/admin/novels/:id",
 	"POST /api/admin/files/upload",
 	"GET /api/admin/keywords/",
+	"POST /api/admin/keywords/",
 	"PUT /api/admin/keywords/:id",
 	"POST /api/admin/keywords/:id/link",
 	"POST /api/admin/keywords/:id/alias",
 	"POST /api/admin/keywords/:id/version",
+	"DELETE /api/admin/keywords/:id",
+	"GET /api/admin/keyword-categories/",
+	"GET /api/admin/keyword-natures/",
+	"POST /api/admin/keyword-aliases/",
+	"PUT /api/admin/keyword-aliases/:id",
+	"DELETE /api/admin/keyword-aliases/:id",
+	"POST /api/admin/keyword-versions/",
+	"PUT /api/admin/keyword-versions/:id",
+	"DELETE /api/admin/keyword-versions/:id",
 	"GET /api/admin/configs/",
 	"PUT /api/admin/configs/",
 	"DELETE /api/admin/configs/:key",
@@ -187,6 +199,137 @@ export const keywords = [
 		nameAr: null,
 		nameEn: "The Lantern",
 		description: "A glowing relic",
+		aliases: [],
+	},
+];
+
+const style = (id: string, nameEn: string, color: string) => ({
+	id,
+	nameEn,
+	nameAr: null,
+	color,
+	description: null,
+	createdAt: now,
+	updatedAt: now,
+});
+
+export const categories = [style("cat-person", "Person", "#6554c0")];
+export const natures = [style("nat-ally", "Ally", "#26705e")];
+
+function version(
+	id: string,
+	keywordId: string,
+	startingChapter: number,
+	endingChapter: number | null,
+	extra: Partial<{
+		description: string;
+		category: ReturnType<typeof style>;
+		nature: ReturnType<typeof style>;
+		image: { id: string; url: string };
+	}> = {},
+) {
+	return {
+		id,
+		keywordId,
+		startingChapter,
+		endingChapter,
+		description: extra.description ?? null,
+		categoryId: extra.category?.id ?? null,
+		category: extra.category ?? null,
+		natureId: extra.nature?.id ?? null,
+		nature: extra.nature ?? null,
+		imageId: extra.image?.id ?? null,
+		image: extra.image
+			? {
+					...extra.image,
+					type: "Image",
+					provider_image_id: extra.image.id,
+					delete_url: "",
+					userId: null,
+					createdAt: now,
+					updatedAt: now,
+				}
+			: null,
+		createdById: null,
+		createdAt: now,
+		updatedAt: now,
+	};
+}
+
+/** The novel profile's keywords: one named in both languages with a later version and an alias. */
+export const keywordDetails = [
+	{
+		id: KEYWORD_IDS.mira,
+		novelId: NOVEL_ID,
+		nameAr: "ميرا",
+		nameEn: "Mira",
+		matchingType: "FULL",
+		createdById: "admin-id",
+		createdBy: { id: "admin-id", username: "admin" },
+		createdAt: now,
+		updatedAt: now,
+		versions: [
+			version("v-mira-0", KEYWORD_IDS.mira, 0, 49, {
+				description: "حارسة الأرشيف",
+				category: categories[0],
+				nature: natures[0],
+				image: {
+					id: "img-mira",
+					url: "data:image/gif;base64,R0lGODlhAQABAAAAACw=",
+				},
+			}),
+			version("v-mira-50", KEYWORD_IDS.mira, 50, null, {
+				description: "The archive's new keeper",
+			}),
+		],
+		aliases: [
+			{
+				id: "alias-mira-vale",
+				keywordId: KEYWORD_IDS.mira,
+				name: "Mira Vale",
+				description: null,
+				matchingType: "FULL",
+				overrideStyle: false,
+				categoryId: null,
+				category: null,
+				natureId: null,
+				nature: null,
+				imageId: null,
+				image: null,
+				createdById: null,
+				createdAt: now,
+				updatedAt: now,
+			},
+		],
+	},
+	{
+		id: KEYWORD_IDS.lanternAr,
+		novelId: NOVEL_ID,
+		nameAr: "الفانوس",
+		nameEn: null,
+		matchingType: "PARTIAL",
+		createdById: null,
+		createdBy: null,
+		createdAt: now,
+		updatedAt: now,
+		versions: [version("v-lantern-ar", KEYWORD_IDS.lanternAr, 0, null)],
+		aliases: [],
+	},
+	{
+		id: KEYWORD_IDS.lanternEn,
+		novelId: NOVEL_ID,
+		nameAr: null,
+		nameEn: "The Lantern",
+		matchingType: "FULL",
+		createdById: null,
+		createdBy: null,
+		createdAt: now,
+		updatedAt: now,
+		versions: [
+			version("v-lantern-en", KEYWORD_IDS.lanternEn, 0, null, {
+				description: "A glowing relic",
+			}),
+		],
 		aliases: [],
 	},
 ];
@@ -381,6 +524,27 @@ export async function mockApi(
 		}
 		if (path === "/api/admin/novels/")
 			return json(route, { data: novels, total: novels.length });
+		if (path === `/api/admin/novels/${NOVEL_ID}/keywords`)
+			return json(route, { data: keywordDetails });
+		if (path === `/api/admin/novels/${NOVEL_ID}`) return json(route, novels[0]);
+		if (path === "/api/admin/keyword-categories/")
+			return json(route, { data: categories });
+		if (path === "/api/admin/keyword-natures/")
+			return json(route, { data: natures });
+		if (
+			path.startsWith("/api/admin/keyword-aliases/") ||
+			path.startsWith("/api/admin/keyword-versions/")
+		) {
+			return json(route, {
+				id: path.split("/").at(-1) || "new-id",
+				...(request.postDataJSON() as object | null),
+			});
+		}
+		if (path === "/api/admin/keywords/" && method === "POST")
+			return json(route, {
+				id: "new-keyword-id",
+				...(request.postDataJSON() as object),
+			});
 		if (path === "/api/admin/keywords/") {
 			// Untranslated rows, or link candidates named only in English.
 			const data =

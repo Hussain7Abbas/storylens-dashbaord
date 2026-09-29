@@ -206,8 +206,15 @@ test("match translations suggests names and saves a row, a link and a bulk selec
 	const prompts = await mockDesktopClient(page);
 	await page.goto(`/translations?novel=${novels[0]?.id}`);
 
+	// Nothing is sent to the AI until the admin asks.
 	const mira = page.getByRole("textbox", { name: "English name for ميرا" });
+	await expect(mira).toHaveValue("");
+	expect(prompts).toHaveLength(0);
+	await page.getByRole("button", { name: "Suggest page" }).click();
 	await expect(mira).toHaveValue("Mira");
+	await expect(
+		page.getByRole("button", { name: "Re-suggest page" }),
+	).toBeVisible();
 	// The AI matched "الفانوس" to the English-only "The Lantern", so it prefills Link.
 	const lanternRow = page
 		.getByRole("row")
@@ -326,4 +333,208 @@ test("the desktop client port defaults to the client's port", async ({
 	await mockApi(page, { signedIn: true });
 	await page.goto(`/translations?novel=${novels[0]?.id}`);
 	await expect(page.getByLabel("Port")).toHaveValue("43127");
+});
+
+test("cancel suggesting aborts the AI request", async ({ page }) => {
+	await mockApi(page, { signedIn: true });
+	await page.addInitScript(() =>
+		localStorage.setItem(
+			"storylens-dashboard-desktop-client",
+			JSON.stringify({ port: 47000, token: "pair", model: "m", effort: "low" }),
+		),
+	);
+	// The desktop client never answers, like a model still thinking.
+	await page.route("http://127.0.0.1:47000/**", () => {});
+	await page.goto(`/translations?novel=${novels[0]?.id}`);
+
+	await page.getByRole("button", { name: "Suggest page" }).click();
+	await expect(page.getByText("Suggesting translations…")).toBeVisible();
+	const aborted = page.waitForEvent("requestfailed", (request) =>
+		request.url().includes("/ExecutePrompt"),
+	);
+	await page.getByRole("button", { name: "Cancel suggesting" }).click();
+	expect((await aborted).failure()?.errorText).toMatch(/abort/i);
+	await expect(page.getByText("Suggesting translations…")).toHaveCount(0);
+	await expect(
+		page.getByRole("button", { name: "Suggest page" }),
+	).toBeEnabled();
+	await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
+test("a novel row opens its profile with characters in the chosen language", async ({
+	page,
+}) => {
+	await mockApi(page, { signedIn: true });
+	await page.goto("/novels");
+	await page.getByRole("cell", { name: /lantern-archive/ }).click();
+	await expect(page).toHaveURL(`/novels/${novels[0]?.id}`);
+	await expect(
+		page.getByRole("heading", { name: /The Lantern Archive/i }),
+	).toBeVisible();
+
+	const table = page.getByRole("table");
+	// Arabic by default: keywords with an Arabic name only.
+	await expect(table.getByText("ميرا", { exact: true })).toBeVisible();
+	await expect(table.getByText("الفانوس", { exact: true })).toBeVisible();
+	await expect(table.getByText("The Lantern", { exact: true })).toHaveCount(0);
+	const lantern = table.getByRole("row").filter({ hasText: "الفانوس" });
+	await expect(lantern.getByText("En missing")).toBeVisible();
+
+	// Versions and aliases sit under their keyword.
+	await expect(table.getByText("Mira Vale")).toBeVisible();
+	await expect(table.getByText("Ch. 0–49")).toBeVisible();
+	await expect(table.getByText("Ch. 50+")).toBeVisible();
+
+	await page.getByText("EN", { exact: true }).click();
+	await expect(page).toHaveURL(/lang=en/);
+	await expect(table.getByText("The Lantern", { exact: true })).toBeVisible();
+	await expect(table.getByText("الفانوس", { exact: true })).toHaveCount(0);
+	await expectAccessible(page);
+});
+
+test("character filters and the full search narrow the table", async ({
+	page,
+}) => {
+	await mockApi(page, { signedIn: true });
+	await page.goto(`/novels/${novels[0]?.id}`);
+	const table = page.getByRole("table");
+	const rows = table.locator("tbody > tr:not(.bg-wash\\/40)");
+	await expect(rows).toHaveCount(2);
+
+	// A typo in an alias still finds its keyword.
+	await page
+		.getByRole("searchbox", { name: "Search all columns" })
+		.fill("mira vlae");
+	await expect(rows).toHaveCount(1);
+	await expect(table.getByText("ميرا", { exact: true })).toBeVisible();
+	await page.getByRole("button", { name: "Clear filters" }).click();
+	await expect(rows).toHaveCount(2);
+
+	await page.getByLabel("Filter by category").selectOption("cat-person");
+	await expect(rows).toHaveCount(1);
+	await page.getByLabel("Filter by category").selectOption("none");
+	await expect(table.getByText("الفانوس", { exact: true })).toBeVisible();
+	await page.getByLabel("Filter by category").selectOption("");
+
+	await page.getByLabel("Filter by match").selectOption("PARTIAL");
+	await expect(rows).toHaveCount(1);
+	await page.getByLabel("Filter by match").selectOption("");
+	await page.getByLabel("Filter by languages").selectOption("both");
+	await expect(rows).toHaveCount(1);
+	await page.getByLabel("Filter by languages").selectOption("");
+	await page.getByLabel("Filter by image").selectOption("without");
+	await expect(table.getByText("الفانوس", { exact: true })).toBeVisible();
+	await expect(rows).toHaveCount(1);
+});
+
+test("character actions add an alias and a version, edit and delete", async ({
+	page,
+}) => {
+	const requests = await mockApi(page, { signedIn: true });
+	await page.goto(`/novels/${novels[0]?.id}`);
+
+	await page.getByRole("button", { name: "Add an alias to ميرا" }).click();
+	let dialog = page.getByRole("dialog", { name: "Add an alias to ميرا" });
+	await dialog.getByLabel("Alias name").fill("The Keeper");
+	await dialog.getByRole("button", { name: "Add alias" }).click();
+	await expect(page.getByText("Alias added")).toBeVisible();
+	expect(requests).toContainEqual(
+		expect.objectContaining({
+			method: "POST",
+			path: "/api/admin/keyword-aliases/",
+			body: expect.objectContaining({
+				keywordId: KEYWORD_IDS.mira,
+				name: "The Keeper",
+				matchingType: "FULL",
+			}),
+		}),
+	);
+
+	await page.getByRole("button", { name: "Add a version to ميرا" }).click();
+	dialog = page.getByRole("dialog", { name: "Add a version to ميرا" });
+	await expect(dialog.getByLabel("Starting chapter")).toHaveValue("51");
+	await dialog.getByRole("button", { name: "Add version" }).click();
+	await expect(page.getByText("Version added")).toBeVisible();
+	expect(requests).toContainEqual(
+		expect.objectContaining({
+			method: "POST",
+			path: "/api/admin/keyword-versions/",
+			body: expect.objectContaining({
+				keywordId: KEYWORD_IDS.mira,
+				startingChapter: 51,
+				endingChapter: null,
+			}),
+		}),
+	);
+
+	await page.getByRole("button", { name: "Edit ميرا", exact: true }).click();
+	dialog = page.getByRole("dialog", { name: "Edit ميرا" });
+	await expect(dialog.getByLabel("Category")).toHaveValue("cat-person");
+	await dialog.getByLabel("English name").fill("Mira the Keeper");
+	await dialog.getByRole("button", { name: "Save changes" }).click();
+	await expect(page.getByText("Keyword updated")).toBeVisible();
+	expect(requests).toContainEqual({
+		method: "PUT",
+		path: `/api/admin/keywords/${KEYWORD_IDS.mira}`,
+		body: { nameAr: "ميرا", nameEn: "Mira the Keeper", matchingType: "FULL" },
+	});
+	expect(requests).toContainEqual(
+		expect.objectContaining({
+			method: "PUT",
+			path: "/api/admin/keyword-versions/v-mira-0",
+			body: expect.objectContaining({
+				categoryId: "cat-person",
+				natureId: "nat-ally",
+				imageId: "img-mira",
+			}),
+		}),
+	);
+
+	// The base version can't be deleted; a later one can.
+	await expect(
+		page.getByRole("button", { name: "Delete ميرا Base version Ch. 0–49" }),
+	).toBeDisabled();
+
+	await page.getByRole("button", { name: "Delete ميرا", exact: true }).click();
+	dialog = page.getByRole("dialog", { name: "Delete keyword?" });
+	await expect(dialog).toContainText("2 versions and 1 aliases");
+	await dialog.getByRole("button", { name: "Delete keyword" }).click();
+	await expect(page.getByText("Keyword deleted")).toBeVisible();
+	expect(requests).toContainEqual(
+		expect.objectContaining({
+			method: "DELETE",
+			path: `/api/admin/keywords/${KEYWORD_IDS.mira}`,
+		}),
+	);
+});
+
+test("a new keyword is created with its base details", async ({ page }) => {
+	const requests = await mockApi(page, { signedIn: true });
+	await page.goto(`/novels/${novels[0]?.id}`);
+	await page.getByRole("button", { name: "New keyword" }).click();
+	const dialog = page.getByRole("dialog", { name: "New keyword" });
+	await dialog.getByRole("button", { name: "Create keyword" }).click();
+	await expect(dialog.getByRole("alert")).toHaveText(
+		"Enter an Arabic or English name.",
+	);
+	await dialog.getByLabel("English name").fill("Old Bell");
+	await dialog.getByLabel("Category").selectOption("cat-person");
+	await dialog.getByLabel("Description").fill("Rings at dawn");
+	await dialog.getByText("Full word match").click();
+	await dialog.getByRole("button", { name: "Create keyword" }).click();
+	await expect(page.getByText("Keyword created")).toBeVisible();
+	expect(requests).toContainEqual({
+		method: "POST",
+		path: "/api/admin/keywords/",
+		body: {
+			novelId: novels[0]?.id,
+			nameAr: null,
+			nameEn: "Old Bell",
+			matchingType: "PARTIAL",
+			description: "Rings at dawn",
+			categoryId: "cat-person",
+			natureId: null,
+			imageId: null,
+		},
+	});
 });

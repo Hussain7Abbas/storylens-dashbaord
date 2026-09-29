@@ -7,10 +7,12 @@
  */
 import type { PutKeywordsByIdBodyOneNameAr } from './putKeywordsByIdBodyOneNameAr';
 import type { PutKeywordsByIdBodyOneNameEn } from './putKeywordsByIdBodyOneNameEn';
+import type { PutKeywordsByIdBodyOneMatchingType } from './putKeywordsByIdBodyOneMatchingType';
 
 export type PutKeywordsByIdBodyOne = {
   /** @nullable */
   nameAr?: PutKeywordsByIdBodyOneNameAr;
   /** @nullable */
   nameEn?: PutKeywordsByIdBodyOneNameEn;
+  matchingType?: PutKeywordsByIdBodyOneMatchingType;
 };

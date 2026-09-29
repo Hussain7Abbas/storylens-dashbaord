@@ -22,6 +22,7 @@ export const PERMISSIONS = {
 	novels: {
 		list: "GET /api/admin/novels/",
 		view: "GET /api/admin/novels/:id",
+		keywords: "GET /api/admin/novels/:id/keywords",
 		create: "POST /api/admin/novels/",
 		update: "PUT /api/admin/novels/:id",
 		delete: "DELETE /api/admin/novels/:id",
@@ -29,10 +30,24 @@ export const PERMISSIONS = {
 	},
 	keywords: {
 		list: "GET /api/admin/keywords/",
+		create: "POST /api/admin/keywords/",
 		update: "PUT /api/admin/keywords/:id",
+		delete: "DELETE /api/admin/keywords/:id",
 		link: "POST /api/admin/keywords/:id/link",
 		alias: "POST /api/admin/keywords/:id/alias",
 		version: "POST /api/admin/keywords/:id/version",
+		categories: "GET /api/admin/keyword-categories/",
+		natures: "GET /api/admin/keyword-natures/",
+	},
+	aliases: {
+		create: "POST /api/admin/keyword-aliases/",
+		update: "PUT /api/admin/keyword-aliases/:id",
+		delete: "DELETE /api/admin/keyword-aliases/:id",
+	},
+	versions: {
+		create: "POST /api/admin/keyword-versions/",
+		update: "PUT /api/admin/keyword-versions/:id",
+		delete: "DELETE /api/admin/keyword-versions/:id",
 	},
 	configs: {
 		list: "GET /api/admin/configs/",

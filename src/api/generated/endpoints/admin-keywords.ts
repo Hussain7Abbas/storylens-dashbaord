@@ -25,10 +25,43 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  DeleteKeywordAliasesById200,
+  DeleteKeywordAliasesById404,
+  DeleteKeywordAliasesById500,
+  DeleteKeywordVersionsById200,
+  DeleteKeywordVersionsById404,
+  DeleteKeywordVersionsById500,
+  DeleteKeywordsById200,
+  DeleteKeywordsById404,
+  DeleteKeywordsById500,
+  GetKeywordCategories200,
+  GetKeywordCategories404,
+  GetKeywordCategories500,
+  GetKeywordNatures200,
+  GetKeywordNatures404,
+  GetKeywordNatures500,
   GetKeywords200,
   GetKeywords404,
   GetKeywords500,
   GetKeywordsParams,
+  PostKeywordAliases200,
+  PostKeywordAliases404,
+  PostKeywordAliases500,
+  PostKeywordAliasesBodyOne,
+  PostKeywordAliasesBodyThree,
+  PostKeywordAliasesBodyTwo,
+  PostKeywordVersions200,
+  PostKeywordVersions404,
+  PostKeywordVersions500,
+  PostKeywordVersionsBodyOne,
+  PostKeywordVersionsBodyThree,
+  PostKeywordVersionsBodyTwo,
+  PostKeywords200,
+  PostKeywords404,
+  PostKeywords500,
+  PostKeywordsBodyOne,
+  PostKeywordsBodyThree,
+  PostKeywordsBodyTwo,
   PostKeywordsByIdAlias200,
   PostKeywordsByIdAlias404,
   PostKeywordsByIdAlias500,
@@ -47,6 +80,18 @@ import type {
   PostKeywordsByIdVersionBodyOne,
   PostKeywordsByIdVersionBodyThree,
   PostKeywordsByIdVersionBodyTwo,
+  PutKeywordAliasesById200,
+  PutKeywordAliasesById404,
+  PutKeywordAliasesById500,
+  PutKeywordAliasesByIdBodyOne,
+  PutKeywordAliasesByIdBodyThree,
+  PutKeywordAliasesByIdBodyTwo,
+  PutKeywordVersionsById200,
+  PutKeywordVersionsById404,
+  PutKeywordVersionsById500,
+  PutKeywordVersionsByIdBodyOne,
+  PutKeywordVersionsByIdBodyThree,
+  PutKeywordVersionsByIdBodyTwo,
   PutKeywordsById200,
   PutKeywordsById404,
   PutKeywordsById500,
@@ -158,7 +203,70 @@ export function useGetKeywords<TData = Awaited<ReturnType<typeof getKeywords>>, 
 
 
 /**
- * @summary Set a keyword’s Arabic and English names
+ * @summary Create a keyword with its base version
+ */
+export const postKeywords = (
+    postKeywordsBody: BodyType<PostKeywordsBodyOne | PostKeywordsBodyTwo | PostKeywordsBodyThree>| PostKeywordsBodyTwo | PostKeywordsBodyThree,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostKeywords200>(
+      {url: `/api/admin/keywords/`, method: 'POST',
+      data: postKeywordsBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostKeywordsMutationOptions = <TError = ErrorType<PostKeywords404 | PostKeywords500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postKeywords>>, TError,{data: BodyType<PostKeywordsBodyOne | PostKeywordsBodyTwo | PostKeywordsBodyThree>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postKeywords>>, TError,{data: BodyType<PostKeywordsBodyOne | PostKeywordsBodyTwo | PostKeywordsBodyThree>}, TContext> => {
+
+const mutationKey = ['postKeywords'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postKeywords>>, {data: BodyType<PostKeywordsBodyOne | PostKeywordsBodyTwo | PostKeywordsBodyThree>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postKeywords(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostKeywordsMutationResult = NonNullable<Awaited<ReturnType<typeof postKeywords>>>
+    export type PostKeywordsMutationBody = BodyType<PostKeywordsBodyOne | PostKeywordsBodyTwo | PostKeywordsBodyThree>
+    export type PostKeywordsMutationError = ErrorType<PostKeywords404 | PostKeywords500>
+
+    /**
+ * @summary Create a keyword with its base version
+ */
+export const usePostKeywords = <TError = ErrorType<PostKeywords404 | PostKeywords500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postKeywords>>, TError,{data: BodyType<PostKeywordsBodyOne | PostKeywordsBodyTwo | PostKeywordsBodyThree>}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postKeywords>>,
+        TError,
+        {data: BodyType<PostKeywordsBodyOne | PostKeywordsBodyTwo | PostKeywordsBodyThree>},
+        TContext
+      > => {
+
+      const mutationOptions = getPostKeywordsMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Set a keyword’s Arabic and English names and matching
  */
 export const putKeywordsById = (
     id: string,
@@ -205,7 +313,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PutKeywordsByIdMutationError = ErrorType<PutKeywordsById404 | PutKeywordsById500>
 
     /**
- * @summary Set a keyword’s Arabic and English names
+ * @summary Set a keyword’s Arabic and English names and matching
  */
 export const usePutKeywordsById = <TError = ErrorType<PutKeywordsById404 | PutKeywordsById500>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putKeywordsById>>, TError,{id: string;data: BodyType<PutKeywordsByIdBodyOne | PutKeywordsByIdBodyTwo | PutKeywordsByIdBodyThree>}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -217,6 +325,67 @@ export const usePutKeywordsById = <TError = ErrorType<PutKeywordsById404 | PutKe
       > => {
 
       const mutationOptions = getPutKeywordsByIdMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Delete a keyword with its aliases and versions
+ */
+export const deleteKeywordsById = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<DeleteKeywordsById200>(
+      {url: `/api/admin/keywords/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getDeleteKeywordsByIdMutationOptions = <TError = ErrorType<DeleteKeywordsById404 | DeleteKeywordsById500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteKeywordsById>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteKeywordsById>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteKeywordsById'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteKeywordsById>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteKeywordsById(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteKeywordsByIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteKeywordsById>>>
+    
+    export type DeleteKeywordsByIdMutationError = ErrorType<DeleteKeywordsById404 | DeleteKeywordsById500>
+
+    /**
+ * @summary Delete a keyword with its aliases and versions
+ */
+export const useDeleteKeywordsById = <TError = ErrorType<DeleteKeywordsById404 | DeleteKeywordsById500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteKeywordsById>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteKeywordsById>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteKeywordsByIdMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -412,4 +581,561 @@ export const usePostKeywordsByIdVersion = <TError = ErrorType<PostKeywordsByIdVe
 
       return useMutation(mutationOptions, queryClient);
     }
+    /**
+ * @summary Add an alias to a keyword
+ */
+export const postKeywordAliases = (
+    postKeywordAliasesBody: BodyType<PostKeywordAliasesBodyOne | PostKeywordAliasesBodyTwo | PostKeywordAliasesBodyThree>| PostKeywordAliasesBodyTwo | PostKeywordAliasesBodyThree,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostKeywordAliases200>(
+      {url: `/api/admin/keyword-aliases/`, method: 'POST',
+      data: postKeywordAliasesBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostKeywordAliasesMutationOptions = <TError = ErrorType<PostKeywordAliases404 | PostKeywordAliases500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postKeywordAliases>>, TError,{data: BodyType<PostKeywordAliasesBodyOne | PostKeywordAliasesBodyTwo | PostKeywordAliasesBodyThree>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postKeywordAliases>>, TError,{data: BodyType<PostKeywordAliasesBodyOne | PostKeywordAliasesBodyTwo | PostKeywordAliasesBodyThree>}, TContext> => {
+
+const mutationKey = ['postKeywordAliases'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postKeywordAliases>>, {data: BodyType<PostKeywordAliasesBodyOne | PostKeywordAliasesBodyTwo | PostKeywordAliasesBodyThree>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postKeywordAliases(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostKeywordAliasesMutationResult = NonNullable<Awaited<ReturnType<typeof postKeywordAliases>>>
+    export type PostKeywordAliasesMutationBody = BodyType<PostKeywordAliasesBodyOne | PostKeywordAliasesBodyTwo | PostKeywordAliasesBodyThree>
+    export type PostKeywordAliasesMutationError = ErrorType<PostKeywordAliases404 | PostKeywordAliases500>
+
+    /**
+ * @summary Add an alias to a keyword
+ */
+export const usePostKeywordAliases = <TError = ErrorType<PostKeywordAliases404 | PostKeywordAliases500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postKeywordAliases>>, TError,{data: BodyType<PostKeywordAliasesBodyOne | PostKeywordAliasesBodyTwo | PostKeywordAliasesBodyThree>}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postKeywordAliases>>,
+        TError,
+        {data: BodyType<PostKeywordAliasesBodyOne | PostKeywordAliasesBodyTwo | PostKeywordAliasesBodyThree>},
+        TContext
+      > => {
+
+      const mutationOptions = getPostKeywordAliasesMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Update a keyword alias
+ */
+export const putKeywordAliasesById = (
+    id: string,
+    putKeywordAliasesByIdBody: BodyType<PutKeywordAliasesByIdBodyOne | PutKeywordAliasesByIdBodyTwo | PutKeywordAliasesByIdBodyThree>| PutKeywordAliasesByIdBodyTwo | PutKeywordAliasesByIdBodyThree,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<PutKeywordAliasesById200>(
+      {url: `/api/admin/keyword-aliases/${id}`, method: 'PUT',
+      data: putKeywordAliasesByIdBody
+    },
+      options);
+    }
+  
+
+
+export const getPutKeywordAliasesByIdMutationOptions = <TError = ErrorType<PutKeywordAliasesById404 | PutKeywordAliasesById500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putKeywordAliasesById>>, TError,{id: string;data: BodyType<PutKeywordAliasesByIdBodyOne | PutKeywordAliasesByIdBodyTwo | PutKeywordAliasesByIdBodyThree>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof putKeywordAliasesById>>, TError,{id: string;data: BodyType<PutKeywordAliasesByIdBodyOne | PutKeywordAliasesByIdBodyTwo | PutKeywordAliasesByIdBodyThree>}, TContext> => {
+
+const mutationKey = ['putKeywordAliasesById'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putKeywordAliasesById>>, {id: string;data: BodyType<PutKeywordAliasesByIdBodyOne | PutKeywordAliasesByIdBodyTwo | PutKeywordAliasesByIdBodyThree>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putKeywordAliasesById(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutKeywordAliasesByIdMutationResult = NonNullable<Awaited<ReturnType<typeof putKeywordAliasesById>>>
+    export type PutKeywordAliasesByIdMutationBody = BodyType<PutKeywordAliasesByIdBodyOne | PutKeywordAliasesByIdBodyTwo | PutKeywordAliasesByIdBodyThree>
+    export type PutKeywordAliasesByIdMutationError = ErrorType<PutKeywordAliasesById404 | PutKeywordAliasesById500>
+
+    /**
+ * @summary Update a keyword alias
+ */
+export const usePutKeywordAliasesById = <TError = ErrorType<PutKeywordAliasesById404 | PutKeywordAliasesById500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putKeywordAliasesById>>, TError,{id: string;data: BodyType<PutKeywordAliasesByIdBodyOne | PutKeywordAliasesByIdBodyTwo | PutKeywordAliasesByIdBodyThree>}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putKeywordAliasesById>>,
+        TError,
+        {id: string;data: BodyType<PutKeywordAliasesByIdBodyOne | PutKeywordAliasesByIdBodyTwo | PutKeywordAliasesByIdBodyThree>},
+        TContext
+      > => {
+
+      const mutationOptions = getPutKeywordAliasesByIdMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Delete a keyword alias
+ */
+export const deleteKeywordAliasesById = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<DeleteKeywordAliasesById200>(
+      {url: `/api/admin/keyword-aliases/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getDeleteKeywordAliasesByIdMutationOptions = <TError = ErrorType<DeleteKeywordAliasesById404 | DeleteKeywordAliasesById500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteKeywordAliasesById>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteKeywordAliasesById>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteKeywordAliasesById'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteKeywordAliasesById>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteKeywordAliasesById(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteKeywordAliasesByIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteKeywordAliasesById>>>
     
+    export type DeleteKeywordAliasesByIdMutationError = ErrorType<DeleteKeywordAliasesById404 | DeleteKeywordAliasesById500>
+
+    /**
+ * @summary Delete a keyword alias
+ */
+export const useDeleteKeywordAliasesById = <TError = ErrorType<DeleteKeywordAliasesById404 | DeleteKeywordAliasesById500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteKeywordAliasesById>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteKeywordAliasesById>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteKeywordAliasesByIdMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Add a version to a keyword
+ */
+export const postKeywordVersions = (
+    postKeywordVersionsBody: BodyType<PostKeywordVersionsBodyOne | PostKeywordVersionsBodyTwo | PostKeywordVersionsBodyThree>| PostKeywordVersionsBodyTwo | PostKeywordVersionsBodyThree,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostKeywordVersions200>(
+      {url: `/api/admin/keyword-versions/`, method: 'POST',
+      data: postKeywordVersionsBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostKeywordVersionsMutationOptions = <TError = ErrorType<PostKeywordVersions404 | PostKeywordVersions500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postKeywordVersions>>, TError,{data: BodyType<PostKeywordVersionsBodyOne | PostKeywordVersionsBodyTwo | PostKeywordVersionsBodyThree>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postKeywordVersions>>, TError,{data: BodyType<PostKeywordVersionsBodyOne | PostKeywordVersionsBodyTwo | PostKeywordVersionsBodyThree>}, TContext> => {
+
+const mutationKey = ['postKeywordVersions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postKeywordVersions>>, {data: BodyType<PostKeywordVersionsBodyOne | PostKeywordVersionsBodyTwo | PostKeywordVersionsBodyThree>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postKeywordVersions(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostKeywordVersionsMutationResult = NonNullable<Awaited<ReturnType<typeof postKeywordVersions>>>
+    export type PostKeywordVersionsMutationBody = BodyType<PostKeywordVersionsBodyOne | PostKeywordVersionsBodyTwo | PostKeywordVersionsBodyThree>
+    export type PostKeywordVersionsMutationError = ErrorType<PostKeywordVersions404 | PostKeywordVersions500>
+
+    /**
+ * @summary Add a version to a keyword
+ */
+export const usePostKeywordVersions = <TError = ErrorType<PostKeywordVersions404 | PostKeywordVersions500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postKeywordVersions>>, TError,{data: BodyType<PostKeywordVersionsBodyOne | PostKeywordVersionsBodyTwo | PostKeywordVersionsBodyThree>}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postKeywordVersions>>,
+        TError,
+        {data: BodyType<PostKeywordVersionsBodyOne | PostKeywordVersionsBodyTwo | PostKeywordVersionsBodyThree>},
+        TContext
+      > => {
+
+      const mutationOptions = getPostKeywordVersionsMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Update a keyword version
+ */
+export const putKeywordVersionsById = (
+    id: string,
+    putKeywordVersionsByIdBody: BodyType<PutKeywordVersionsByIdBodyOne | PutKeywordVersionsByIdBodyTwo | PutKeywordVersionsByIdBodyThree>| PutKeywordVersionsByIdBodyTwo | PutKeywordVersionsByIdBodyThree,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<PutKeywordVersionsById200>(
+      {url: `/api/admin/keyword-versions/${id}`, method: 'PUT',
+      data: putKeywordVersionsByIdBody
+    },
+      options);
+    }
+  
+
+
+export const getPutKeywordVersionsByIdMutationOptions = <TError = ErrorType<PutKeywordVersionsById404 | PutKeywordVersionsById500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putKeywordVersionsById>>, TError,{id: string;data: BodyType<PutKeywordVersionsByIdBodyOne | PutKeywordVersionsByIdBodyTwo | PutKeywordVersionsByIdBodyThree>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof putKeywordVersionsById>>, TError,{id: string;data: BodyType<PutKeywordVersionsByIdBodyOne | PutKeywordVersionsByIdBodyTwo | PutKeywordVersionsByIdBodyThree>}, TContext> => {
+
+const mutationKey = ['putKeywordVersionsById'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putKeywordVersionsById>>, {id: string;data: BodyType<PutKeywordVersionsByIdBodyOne | PutKeywordVersionsByIdBodyTwo | PutKeywordVersionsByIdBodyThree>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putKeywordVersionsById(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutKeywordVersionsByIdMutationResult = NonNullable<Awaited<ReturnType<typeof putKeywordVersionsById>>>
+    export type PutKeywordVersionsByIdMutationBody = BodyType<PutKeywordVersionsByIdBodyOne | PutKeywordVersionsByIdBodyTwo | PutKeywordVersionsByIdBodyThree>
+    export type PutKeywordVersionsByIdMutationError = ErrorType<PutKeywordVersionsById404 | PutKeywordVersionsById500>
+
+    /**
+ * @summary Update a keyword version
+ */
+export const usePutKeywordVersionsById = <TError = ErrorType<PutKeywordVersionsById404 | PutKeywordVersionsById500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putKeywordVersionsById>>, TError,{id: string;data: BodyType<PutKeywordVersionsByIdBodyOne | PutKeywordVersionsByIdBodyTwo | PutKeywordVersionsByIdBodyThree>}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putKeywordVersionsById>>,
+        TError,
+        {id: string;data: BodyType<PutKeywordVersionsByIdBodyOne | PutKeywordVersionsByIdBodyTwo | PutKeywordVersionsByIdBodyThree>},
+        TContext
+      > => {
+
+      const mutationOptions = getPutKeywordVersionsByIdMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Delete a keyword version
+ */
+export const deleteKeywordVersionsById = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<DeleteKeywordVersionsById200>(
+      {url: `/api/admin/keyword-versions/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getDeleteKeywordVersionsByIdMutationOptions = <TError = ErrorType<DeleteKeywordVersionsById404 | DeleteKeywordVersionsById500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteKeywordVersionsById>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteKeywordVersionsById>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteKeywordVersionsById'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteKeywordVersionsById>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteKeywordVersionsById(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteKeywordVersionsByIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteKeywordVersionsById>>>
+    
+    export type DeleteKeywordVersionsByIdMutationError = ErrorType<DeleteKeywordVersionsById404 | DeleteKeywordVersionsById500>
+
+    /**
+ * @summary Delete a keyword version
+ */
+export const useDeleteKeywordVersionsById = <TError = ErrorType<DeleteKeywordVersionsById404 | DeleteKeywordVersionsById500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteKeywordVersionsById>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteKeywordVersionsById>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteKeywordVersionsByIdMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary List keyword categories
+ */
+export const getKeywordCategories = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<GetKeywordCategories200>(
+      {url: `/api/admin/keyword-categories/`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetKeywordCategoriesQueryKey = () => {
+    return [
+    `/api/admin/keyword-categories/`
+    ] as const;
+    }
+
+    
+export const getGetKeywordCategoriesQueryOptions = <TData = Awaited<ReturnType<typeof getKeywordCategories>>, TError = ErrorType<GetKeywordCategories404 | GetKeywordCategories500>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getKeywordCategories>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetKeywordCategoriesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getKeywordCategories>>> = ({ signal }) => getKeywordCategories(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getKeywordCategories>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetKeywordCategoriesQueryResult = NonNullable<Awaited<ReturnType<typeof getKeywordCategories>>>
+export type GetKeywordCategoriesQueryError = ErrorType<GetKeywordCategories404 | GetKeywordCategories500>
+
+
+export function useGetKeywordCategories<TData = Awaited<ReturnType<typeof getKeywordCategories>>, TError = ErrorType<GetKeywordCategories404 | GetKeywordCategories500>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getKeywordCategories>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getKeywordCategories>>,
+          TError,
+          Awaited<ReturnType<typeof getKeywordCategories>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetKeywordCategories<TData = Awaited<ReturnType<typeof getKeywordCategories>>, TError = ErrorType<GetKeywordCategories404 | GetKeywordCategories500>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getKeywordCategories>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getKeywordCategories>>,
+          TError,
+          Awaited<ReturnType<typeof getKeywordCategories>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetKeywordCategories<TData = Awaited<ReturnType<typeof getKeywordCategories>>, TError = ErrorType<GetKeywordCategories404 | GetKeywordCategories500>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getKeywordCategories>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List keyword categories
+ */
+
+export function useGetKeywordCategories<TData = Awaited<ReturnType<typeof getKeywordCategories>>, TError = ErrorType<GetKeywordCategories404 | GetKeywordCategories500>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getKeywordCategories>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetKeywordCategoriesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary List keyword natures
+ */
+export const getKeywordNatures = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<GetKeywordNatures200>(
+      {url: `/api/admin/keyword-natures/`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetKeywordNaturesQueryKey = () => {
+    return [
+    `/api/admin/keyword-natures/`
+    ] as const;
+    }
+
+    
+export const getGetKeywordNaturesQueryOptions = <TData = Awaited<ReturnType<typeof getKeywordNatures>>, TError = ErrorType<GetKeywordNatures404 | GetKeywordNatures500>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getKeywordNatures>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetKeywordNaturesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getKeywordNatures>>> = ({ signal }) => getKeywordNatures(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getKeywordNatures>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetKeywordNaturesQueryResult = NonNullable<Awaited<ReturnType<typeof getKeywordNatures>>>
+export type GetKeywordNaturesQueryError = ErrorType<GetKeywordNatures404 | GetKeywordNatures500>
+
+
+export function useGetKeywordNatures<TData = Awaited<ReturnType<typeof getKeywordNatures>>, TError = ErrorType<GetKeywordNatures404 | GetKeywordNatures500>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getKeywordNatures>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getKeywordNatures>>,
+          TError,
+          Awaited<ReturnType<typeof getKeywordNatures>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetKeywordNatures<TData = Awaited<ReturnType<typeof getKeywordNatures>>, TError = ErrorType<GetKeywordNatures404 | GetKeywordNatures500>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getKeywordNatures>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getKeywordNatures>>,
+          TError,
+          Awaited<ReturnType<typeof getKeywordNatures>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetKeywordNatures<TData = Awaited<ReturnType<typeof getKeywordNatures>>, TError = ErrorType<GetKeywordNatures404 | GetKeywordNatures500>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getKeywordNatures>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List keyword natures
+ */
+
+export function useGetKeywordNatures<TData = Awaited<ReturnType<typeof getKeywordNatures>>, TError = ErrorType<GetKeywordNatures404 | GetKeywordNatures500>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getKeywordNatures>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetKeywordNaturesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+

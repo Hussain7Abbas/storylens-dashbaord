@@ -16,6 +16,7 @@ import { AccountPage } from "@/pages/account";
 import { ConfigsPage } from "@/pages/configs";
 import { LoginPage } from "@/pages/login";
 import { MatchTranslationsPage } from "@/pages/match-translations";
+import { NovelProfilePage } from "@/pages/novel-profile";
 import { NovelsPage } from "@/pages/novels";
 import { OverviewPage } from "@/pages/overview";
 import { RoleEditorPage } from "@/pages/role-editor";
@@ -116,6 +117,14 @@ const router = createBrowserRouter([
 						element: (
 							<Allow permission={PERMISSIONS.novels.list}>
 								<NovelsPage />
+							</Allow>
+						),
+					},
+					{
+						path: "novels/:id",
+						element: (
+							<Allow permission={PERMISSIONS.novels.view}>
+								<NovelProfilePage />
 							</Allow>
 						),
 					},
