@@ -5,6 +5,8 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
+import type { PostKeywords200AliasesItemNameAr } from './postKeywords200AliasesItemNameAr';
+import type { PostKeywords200AliasesItemNameEn } from './postKeywords200AliasesItemNameEn';
 import type { PostKeywords200AliasesItemDescription } from './postKeywords200AliasesItemDescription';
 import type { PostKeywords200AliasesItemMatchingType } from './postKeywords200AliasesItemMatchingType';
 import type { PostKeywords200AliasesItemCategoryId } from './postKeywords200AliasesItemCategoryId';
@@ -20,6 +22,8 @@ import type { PostKeywords200AliasesItemImage } from './postKeywords200AliasesIt
 export type PostKeywords200AliasesItem = {
   id: string;
   name: string;
+  nameAr: PostKeywords200AliasesItemNameAr;
+  nameEn: PostKeywords200AliasesItemNameEn;
   description: PostKeywords200AliasesItemDescription;
   matchingType: PostKeywords200AliasesItemMatchingType;
   overrideStyle: boolean;

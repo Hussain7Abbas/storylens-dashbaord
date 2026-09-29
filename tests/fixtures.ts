@@ -287,6 +287,9 @@ export const keywordDetails = [
 				id: "alias-mira-vale",
 				keywordId: KEYWORD_IDS.mira,
 				name: "Mira Vale",
+				// Added before aliases had language names: `name` stands for English.
+				nameAr: null,
+				nameEn: null,
 				description: null,
 				matchingType: "FULL",
 				overrideStyle: false,

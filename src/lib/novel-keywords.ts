@@ -1,45 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-	getGetKeywordsQueryKey,
-	getKeywords,
-} from "@/api/generated/endpoints/admin-keywords";
-import type { GetKeywords200DataItem } from "@/api/generated/schemas";
+	getGetNovelsByIdKeywordsQueryKey,
+	getNovelsByIdKeywords,
+} from "@/api/generated/endpoints/admin-novels";
 
-const PAGE_SIZE = 100;
-
-/** Under the generated keywords key, so invalidating keywords refreshes it too. */
-export function novelKeywordsQueryKey(novelId: string) {
-	return [...getGetKeywordsQueryKey(), "all", novelId] as const;
-}
-
-/** Every keyword of one novel, for searching and matching in the browser. */
-export async function loadNovelKeywords(
-	novelId: string,
-	signal?: AbortSignal,
-): Promise<GetKeywords200DataItem[]> {
-	const first = await getKeywords(
-		{ novelId, page: 1, pageSize: PAGE_SIZE },
-		undefined,
-		signal,
-	);
-	const pages = Math.ceil(first.total / PAGE_SIZE);
-	const rest = await Promise.all(
-		Array.from({ length: Math.max(pages - 1, 0) }, (_, index) =>
-			getKeywords(
-				{ novelId, page: index + 2, pageSize: PAGE_SIZE },
-				undefined,
-				signal,
-			),
-		),
-	);
-	return [first, ...rest].flatMap((page) => page.data);
-}
-
+/**
+ * Every keyword of one novel with its aliases and versions, for searching and
+ * matching in the browser. Shares the novel profile's query, so
+ * `refreshKeywords` updates both.
+ */
 export function novelKeywordsQuery(novelId: string) {
 	return {
-		queryKey: novelKeywordsQueryKey(novelId),
+		queryKey: getGetNovelsByIdKeywordsQueryKey(novelId),
+		// The full response, as the generated `useGetNovelsByIdKeywords` caches it.
 		queryFn: ({ signal }: { signal: AbortSignal }) =>
-			loadNovelKeywords(novelId, signal),
+			getNovelsByIdKeywords(novelId, undefined, signal),
 		staleTime: 60_000,
 	};
 }
@@ -47,6 +22,7 @@ export function novelKeywordsQuery(novelId: string) {
 export function useNovelKeywords(novelId: string, enabled: boolean) {
 	return useQuery({
 		...novelKeywordsQuery(novelId),
+		select: (response) => response.data,
 		enabled: enabled && !!novelId,
 	});
 }

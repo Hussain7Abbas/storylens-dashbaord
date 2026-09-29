@@ -9,16 +9,27 @@ import {
 	useRef,
 	useState,
 } from "react";
+import type { GetNovelsByIdKeywords200DataItem } from "@/api/generated/schemas";
 import { fuzzyScore, normalizeForSearch } from "@/lib/fuzzy";
 import { useNovelKeywords } from "@/lib/novel-keywords";
-import { bothNames } from "@/lib/translation";
+import { aliasNames, bothNames } from "@/lib/translation";
 import { Spinner } from "./spinner";
 
+/** A keyword, or (from a Link picker) an alias of `keywordId`. */
 export type PickedKeyword = {
+	kind: "keyword" | "alias";
 	id: string;
+	keywordId: string;
 	label: string;
 	nameAr: string | null;
 	nameEn: string | null;
+};
+
+type Entry = PickedKeyword & {
+	/** What the option also shows: a keyword's aliases, or the alias's keyword. */
+	detail: string | null;
+	texts: string[];
+	aliasTexts: string[];
 };
 
 const RESULTS = 20;
@@ -27,18 +38,69 @@ const MAX_HEIGHT = 240;
 /** Gap between the list and its input, and between the list and the viewport edge. */
 const GAP = 4;
 const EDGE = 8;
-/** An alias match ranks a little below the same match on a name. */
+/** A match on a keyword's alias ranks a little below the same match on its name. */
 const ALIAS_WEIGHT = 0.9;
 
+const normalized = (names: (string | null | undefined)[]) => [
+	...new Set(names.flatMap((name) => (name ? [normalizeForSearch(name)] : []))),
+];
+
+function keywordEntry(
+	keyword: GetNovelsByIdKeywords200DataItem,
+	withAliases: boolean,
+): Entry {
+	return {
+		kind: "keyword",
+		id: keyword.id,
+		keywordId: keyword.id,
+		label: bothNames(keyword),
+		nameAr: keyword.nameAr,
+		nameEn: keyword.nameEn,
+		detail: withAliases
+			? keyword.aliases.map((alias) => alias.name).join(", ") || null
+			: null,
+		texts: normalized([keyword.nameAr, keyword.nameEn]),
+		aliasTexts: withAliases
+			? normalized(
+					keyword.aliases.flatMap((alias) => [
+						alias.name,
+						alias.nameAr,
+						alias.nameEn,
+					]),
+				)
+			: [],
+	};
+}
+
+function aliasEntries(keyword: GetNovelsByIdKeywords200DataItem): Entry[] {
+	return keyword.aliases.map((alias) => {
+		const names = aliasNames(alias);
+		return {
+			kind: "alias",
+			id: alias.id,
+			keywordId: keyword.id,
+			label: bothNames({ nameAr: names.ar, nameEn: names.en }) || alias.name,
+			nameAr: names.ar,
+			nameEn: names.en,
+			detail: `Alias of ${bothNames(keyword)}`,
+			texts: normalized([alias.name, names.ar, names.en]),
+			aliasTexts: [],
+		};
+	});
+}
+
 /**
- * Searchable combobox over one novel's keywords in both languages. The novel's
- * keywords load once and are fuzzy-matched as the admin types (typos, Arabic
- * spelling variants and aliases included). The list is fixed to the viewport
- * so table cells don't clip it.
+ * Searchable combobox over one novel's keywords in both languages, loaded once
+ * and fuzzy-matched as the admin types (typos and Arabic spelling variants
+ * included). `link` also offers every alias as its own result, since a keyword
+ * may be the translation of an alias; `parent` (alias of, version of) offers
+ * main keywords only, found by their aliases too. Versions are never offered.
+ * The list is fixed to the viewport so table cells don't clip it.
  */
 export function KeywordPicker({
 	novelId,
 	excludeId,
+	mode,
 	value,
 	onChange,
 	disabled = false,
@@ -47,6 +109,7 @@ export function KeywordPicker({
 }: {
 	novelId: string;
 	excludeId: string;
+	mode: "link" | "parent";
 	value: PickedKeyword | null;
 	onChange: (value: PickedKeyword | null) => void;
 	disabled?: boolean;
@@ -62,36 +125,34 @@ export function KeywordPicker({
 	const [position, setPosition] = useState<CSSProperties>({});
 
 	const keywords = useNovelKeywords(novelId, open);
-	const index = useMemo(
-		() =>
-			(keywords.data ?? [])
-				.filter((keyword) => keyword.id !== excludeId)
-				.map((keyword) => ({
-					keyword,
-					names: [keyword.nameAr, keyword.nameEn]
-						.filter((name): name is string => !!name)
-						.map(normalizeForSearch),
-					aliases: keyword.aliases.map(normalizeForSearch),
-				})),
-		[keywords.data, excludeId],
-	);
+	const index = useMemo(() => {
+		const others = (keywords.data ?? []).filter(
+			(keyword) => keyword.id !== excludeId,
+		);
+		const entries = others.map((keyword) =>
+			keywordEntry(keyword, mode === "parent"),
+		);
+		return mode === "link"
+			? [...entries, ...others.flatMap(aliasEntries)]
+			: entries;
+	}, [keywords.data, excludeId, mode]);
 	const options = useMemo(() => {
-		if (!search) return index.slice(0, RESULTS).map((entry) => entry.keyword);
+		if (!search) return index.slice(0, RESULTS);
 		return index
 			.map((entry) => ({
-				keyword: entry.keyword,
+				entry,
 				score: Math.max(
 					0,
-					...entry.names.map((name) => fuzzyScore(search, name)),
-					...entry.aliases.map(
+					...entry.texts.map((name) => fuzzyScore(search, name)),
+					...entry.aliasTexts.map(
 						(alias) => fuzzyScore(search, alias) * ALIAS_WEIGHT,
 					),
 				),
 			}))
-			.filter((entry) => entry.score > 0)
+			.filter((item) => item.score > 0)
 			.sort((a, b) => b.score - a.score)
 			.slice(0, RESULTS)
-			.map((entry) => entry.keyword);
+			.map((item) => item.entry);
 	}, [index, search]);
 
 	useLayoutEffect(() => {
@@ -133,13 +194,15 @@ export function KeywordPicker({
 	}, [open]);
 
 	const choose = (index: number) => {
-		const keyword = options[index];
-		if (!keyword) return;
+		const entry = options[index];
+		if (!entry) return;
 		onChange({
-			id: keyword.id,
-			label: bothNames(keyword),
-			nameAr: keyword.nameAr,
-			nameEn: keyword.nameEn,
+			kind: entry.kind,
+			id: entry.id,
+			keywordId: entry.keywordId,
+			label: entry.label,
+			nameAr: entry.nameAr,
+			nameEn: entry.nameEn,
 		});
 		setText("");
 		setOpen(false);
@@ -226,10 +289,10 @@ export function KeywordPicker({
 					) : options.length === 0 ? (
 						<p className="px-3 py-2 text-muted">No matching keywords</p>
 					) : (
-						options.map((keyword, index) => (
+						options.map((entry, index) => (
 							<button
 								type="button"
-								key={keyword.id}
+								key={`${entry.kind}-${entry.id}`}
 								id={`${listId}-${index}`}
 								role="option"
 								tabIndex={-1}
@@ -240,11 +303,14 @@ export function KeywordPicker({
 								onClick={() => choose(index)}
 							>
 								<span className="block" dir="auto">
-									{bothNames(keyword)}
+									{entry.label}
 								</span>
-								{keyword.aliases.length > 0 && (
-									<span className="block truncate text-xs text-muted">
-										{keyword.aliases.join(", ")}
+								{entry.detail && (
+									<span
+										className="block truncate text-xs text-muted"
+										dir="auto"
+									>
+										{entry.detail}
 									</span>
 								)}
 							</button>

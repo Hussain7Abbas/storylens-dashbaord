@@ -43,10 +43,10 @@ import {
 } from "@/lib/keyword-details";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
+	aliasNames,
 	LANGUAGE_LABELS,
 	type Language,
 	namesByScript,
-	scriptLanguage,
 } from "@/lib/translation";
 import { useSearchState } from "@/lib/use-search-state";
 
@@ -104,7 +104,11 @@ function toRow(keyword: KeywordDetail): Row {
 	const nameText = [
 		names.ar,
 		names.en,
-		...keyword.aliases.map((alias) => alias.name),
+		...keyword.aliases.flatMap((alias) => [
+			alias.name,
+			alias.nameAr,
+			alias.nameEn,
+		]),
 	].flatMap((name) => (name ? [normalizeForSearch(name)] : []));
 	return {
 		keyword,
@@ -811,7 +815,11 @@ export function CharactersSection({
 													);
 												})}
 											{keyword.aliases.map((alias) => {
-												const aliasLanguage = scriptLanguage(alias.name);
+												const names = aliasNames(alias);
+												const translations = [names.ar, names.en].filter(
+													(item): item is string =>
+														!!item && item !== alias.name,
+												);
 												return (
 													<tr key={alias.id} className="bg-wash/40">
 														<td>
@@ -836,13 +844,18 @@ export function CharactersSection({
 															<p className="text-sm" dir="auto">
 																{alias.name}
 															</p>
+															{translations.map((item) => (
+																<p
+																	key={item}
+																	className="text-xs text-muted"
+																	dir="auto"
+																>
+																	{item}
+																</p>
+															))}
 														</td>
 														<td>
-															{aliasLanguage && (
-																<span className="badge">
-																	{aliasLanguage === "ar" ? "Ar" : "En"}
-																</span>
-															)}
+															<Languages names={names} />
 														</td>
 														<td>
 															<StyleChip

@@ -9,6 +9,8 @@ import type { PostKeywordAliasesBodyOneDescription } from './postKeywordAliasesB
 import type { PostKeywordAliasesBodyOneCategoryId } from './postKeywordAliasesBodyOneCategoryId';
 import type { PostKeywordAliasesBodyOneNatureId } from './postKeywordAliasesBodyOneNatureId';
 import type { PostKeywordAliasesBodyOneImageId } from './postKeywordAliasesBodyOneImageId';
+import type { PostKeywordAliasesBodyOneNameAr } from './postKeywordAliasesBodyOneNameAr';
+import type { PostKeywordAliasesBodyOneNameEn } from './postKeywordAliasesBodyOneNameEn';
 import type { PostKeywordAliasesBodyOneMatchingType } from './postKeywordAliasesBodyOneMatchingType';
 
 export type PostKeywordAliasesBodyOne = {
@@ -26,6 +28,10 @@ export type PostKeywordAliasesBodyOne = {
   natureId?: PostKeywordAliasesBodyOneNatureId;
   /** @nullable */
   imageId?: PostKeywordAliasesBodyOneImageId;
+  /** @nullable */
+  nameAr?: PostKeywordAliasesBodyOneNameAr;
+  /** @nullable */
+  nameEn?: PostKeywordAliasesBodyOneNameEn;
   matchingType?: PostKeywordAliasesBodyOneMatchingType;
   overrideStyle?: boolean;
 };

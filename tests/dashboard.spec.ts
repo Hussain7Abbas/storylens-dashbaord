@@ -538,3 +538,95 @@ test("a new keyword is created with its base details", async ({ page }) => {
 		},
 	});
 });
+
+test("the link picker offers aliases in both languages; alias of and version of offer keywords only", async ({
+	page,
+}) => {
+	const requests = await mockApi(page, { signedIn: true });
+	await page.goto(`/translations?novel=${novels[0]?.id}`);
+
+	const parent = page.getByRole("combobox", {
+		name: "Make الفانوس an alias of",
+	});
+	await parent.fill("vale");
+	// Found through its alias, but only the keyword itself is offered.
+	await expect(page.getByRole("option", { name: /Mira · ميرا/ })).toBeVisible();
+	await expect(page.getByRole("option", { name: /Alias of/ })).toHaveCount(0);
+	await parent.fill("");
+	await parent.blur();
+
+	const link = page.getByRole("combobox", {
+		name: "Link الفانوس to its English keyword",
+	});
+	const linkList = page.getByRole("listbox", {
+		name: "Link الفانوس to its English keyword",
+	});
+	await link.fill("vale");
+	const aliasOption = linkList.getByRole("option", { name: /Mira Vale/ });
+	await expect(aliasOption).toContainText("Alias of Mira · ميرا");
+	await link.fill("ميرا");
+	await expect(
+		linkList.getByRole("option", { name: /^Mira · ميرا$/ }),
+	).toBeVisible();
+	await link.fill("vale");
+	await aliasOption.click();
+	await expect(
+		page.getByRole("combobox", { name: "Make الفانوس an alias of" }),
+	).toBeDisabled();
+
+	const row = page
+		.getByRole("row")
+		.filter({ has: page.getByRole("checkbox", { name: "Select الفانوس" }) });
+	await row.getByRole("button", { name: "Save" }).click();
+	await expect(page.getByText("Row saved")).toBeVisible();
+	expect(requests).toContainEqual({
+		method: "POST",
+		path: `/api/admin/keywords/${KEYWORD_IDS.lanternAr}/link-alias`,
+		body: { aliasId: "alias-mira-vale" },
+	});
+});
+
+test("linking to an alias that already has a name in that language is refused", async ({
+	page,
+}) => {
+	const requests = await mockApi(page, { signedIn: true });
+	await page.goto(`/translations?novel=${novels[0]?.id}`);
+	const link = page.getByRole("combobox", {
+		name: "Link The Lantern to its Arabic keyword",
+	});
+	await link.fill("vale");
+	await page.getByRole("option", { name: /Mira Vale/ }).click();
+	const row = page.getByRole("row").filter({
+		has: page.getByRole("checkbox", { name: "Select The Lantern" }),
+	});
+	await row.getByRole("button", { name: "Save" }).click();
+	await expect(row.getByRole("alert")).toHaveText(
+		"The alias “Mira Vale” already has the English name “Mira Vale”.",
+	);
+	expect(requests.some((request) => request.path.endsWith("/link-alias"))).toBe(
+		false,
+	);
+});
+
+test("an alias's translation is edited on the novel profile", async ({
+	page,
+}) => {
+	const requests = await mockApi(page, { signedIn: true });
+	await page.goto(`/novels/${novels[0]?.id}`);
+	await page.getByRole("button", { name: "Edit alias Mira Vale" }).click();
+	const dialog = page.getByRole("dialog", { name: "Edit alias" });
+	await dialog.getByLabel("Arabic name").fill("ميرا فيل");
+	await dialog.getByRole("button", { name: "Save changes" }).click();
+	await expect(page.getByText("Alias updated")).toBeVisible();
+	expect(requests).toContainEqual(
+		expect.objectContaining({
+			method: "PUT",
+			path: "/api/admin/keyword-aliases/alias-mira-vale",
+			body: expect.objectContaining({
+				name: "Mira Vale",
+				nameAr: "ميرا فيل",
+				nameEn: "Mira Vale",
+			}),
+		}),
+	);
+});

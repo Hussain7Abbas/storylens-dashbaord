@@ -71,6 +71,12 @@ import type {
   PostKeywordsByIdLink200,
   PostKeywordsByIdLink404,
   PostKeywordsByIdLink500,
+  PostKeywordsByIdLinkAlias200,
+  PostKeywordsByIdLinkAlias404,
+  PostKeywordsByIdLinkAlias500,
+  PostKeywordsByIdLinkAliasBodyOne,
+  PostKeywordsByIdLinkAliasBodyThree,
+  PostKeywordsByIdLinkAliasBodyTwo,
   PostKeywordsByIdLinkBodyOne,
   PostKeywordsByIdLinkBodyThree,
   PostKeywordsByIdLinkBodyTwo,
@@ -450,6 +456,70 @@ export const usePostKeywordsByIdLink = <TError = ErrorType<PostKeywordsByIdLink4
       > => {
 
       const mutationOptions = getPostKeywordsByIdLinkMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Merge a keyword into an alias as that alias’s name in the other language
+ */
+export const postKeywordsByIdLinkAlias = (
+    id: string,
+    postKeywordsByIdLinkAliasBody: BodyType<PostKeywordsByIdLinkAliasBodyOne | PostKeywordsByIdLinkAliasBodyTwo | PostKeywordsByIdLinkAliasBodyThree>| PostKeywordsByIdLinkAliasBodyTwo | PostKeywordsByIdLinkAliasBodyThree,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PostKeywordsByIdLinkAlias200>(
+      {url: `/api/admin/keywords/${id}/link-alias`, method: 'POST',
+      data: postKeywordsByIdLinkAliasBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostKeywordsByIdLinkAliasMutationOptions = <TError = ErrorType<PostKeywordsByIdLinkAlias404 | PostKeywordsByIdLinkAlias500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postKeywordsByIdLinkAlias>>, TError,{id: string;data: BodyType<PostKeywordsByIdLinkAliasBodyOne | PostKeywordsByIdLinkAliasBodyTwo | PostKeywordsByIdLinkAliasBodyThree>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postKeywordsByIdLinkAlias>>, TError,{id: string;data: BodyType<PostKeywordsByIdLinkAliasBodyOne | PostKeywordsByIdLinkAliasBodyTwo | PostKeywordsByIdLinkAliasBodyThree>}, TContext> => {
+
+const mutationKey = ['postKeywordsByIdLinkAlias'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postKeywordsByIdLinkAlias>>, {id: string;data: BodyType<PostKeywordsByIdLinkAliasBodyOne | PostKeywordsByIdLinkAliasBodyTwo | PostKeywordsByIdLinkAliasBodyThree>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postKeywordsByIdLinkAlias(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostKeywordsByIdLinkAliasMutationResult = NonNullable<Awaited<ReturnType<typeof postKeywordsByIdLinkAlias>>>
+    export type PostKeywordsByIdLinkAliasMutationBody = BodyType<PostKeywordsByIdLinkAliasBodyOne | PostKeywordsByIdLinkAliasBodyTwo | PostKeywordsByIdLinkAliasBodyThree>
+    export type PostKeywordsByIdLinkAliasMutationError = ErrorType<PostKeywordsByIdLinkAlias404 | PostKeywordsByIdLinkAlias500>
+
+    /**
+ * @summary Merge a keyword into an alias as that alias’s name in the other language
+ */
+export const usePostKeywordsByIdLinkAlias = <TError = ErrorType<PostKeywordsByIdLinkAlias404 | PostKeywordsByIdLinkAlias500>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postKeywordsByIdLinkAlias>>, TError,{id: string;data: BodyType<PostKeywordsByIdLinkAliasBodyOne | PostKeywordsByIdLinkAliasBodyTwo | PostKeywordsByIdLinkAliasBodyThree>}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postKeywordsByIdLinkAlias>>,
+        TError,
+        {id: string;data: BodyType<PostKeywordsByIdLinkAliasBodyOne | PostKeywordsByIdLinkAliasBodyTwo | PostKeywordsByIdLinkAliasBodyThree>},
+        TContext
+      > => {
+
+      const mutationOptions = getPostKeywordsByIdLinkAliasMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

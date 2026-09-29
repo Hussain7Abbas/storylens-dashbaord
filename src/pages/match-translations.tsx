@@ -4,9 +4,9 @@ import { Check, CircleStop, EyeOff, RefreshCw, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { errorMessage } from "@/api/axios-instance";
 import {
-	getGetKeywordsQueryKey,
 	postKeywordsByIdAlias,
 	postKeywordsByIdLink,
+	postKeywordsByIdLinkAlias,
 	postKeywordsByIdVersion,
 	putKeywordsById,
 	useGetKeywords,
@@ -38,6 +38,7 @@ import {
 	loadDesktopSettings,
 	saveDesktopSettings,
 } from "@/lib/desktop-client";
+import { type KeywordDetail, refreshKeywords } from "@/lib/keyword-details";
 import { novelKeywordsQuery } from "@/lib/novel-keywords";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
@@ -89,9 +90,9 @@ function relationOf(draft: Draft): Relation | null {
 
 /** Keywords named only in `target`: the ones a `target`-less keyword may be linked to. */
 function candidatesIn(
-	keywords: Keyword[],
+	keywords: KeywordDetail[],
 	target: Language,
-): (TranslationCandidate & { keyword: Keyword })[] {
+): (TranslationCandidate & { keyword: KeywordDetail })[] {
 	return keywords.flatMap((keyword) => {
 		const single = singleName(keyword);
 		return single?.source === target
@@ -100,9 +101,11 @@ function candidatesIn(
 	});
 }
 
-function toPicked(keyword: Keyword): PickedKeyword {
+function toPicked(keyword: KeywordDetail): PickedKeyword {
 	return {
+		kind: "keyword",
 		id: keyword.id,
+		keywordId: keyword.id,
 		label: bothNames(keyword),
 		nameAr: keyword.nameAr,
 		nameEn: keyword.nameEn,
@@ -314,7 +317,8 @@ export function MatchTranslationsPage() {
 			const run = ++aiRun.current;
 			setAi({ status: "running" });
 			try {
-				const all = await queryClient.fetchQuery(novelKeywordsQuery(novelId));
+				const all = (await queryClient.fetchQuery(novelKeywordsQuery(novelId)))
+					.data;
 				for (const target of ["en", "ar"] as const) {
 					const sources = targets.filter(
 						(keyword) => singleName(keyword)?.target === target,
@@ -416,16 +420,28 @@ export function MatchTranslationsPage() {
 		setSaving((current) => new Set(current).add(keyword.id));
 		try {
 			if (draft.link) {
-				// Linking merges names by column, so both must be in the right one.
-				const taken = namesByScript(draft.link)[single.source];
+				const link = draft.link;
+				// An alias keeps a name per language; a keyword's lone name goes by its script.
+				const taken =
+					link.kind === "alias"
+						? { ar: link.nameAr, en: link.nameEn }[single.source]
+						: namesByScript(link)[single.source];
 				if (taken && taken !== single.name) {
 					throw new Error(
-						`“${draft.link.label}” already has the ${LANGUAGE_LABELS[single.source]} name “${taken}”. Use Alias of or Version of instead.`,
+						link.kind === "alias"
+							? `The alias “${link.label}” already has the ${LANGUAGE_LABELS[single.source]} name “${taken}”.`
+							: `“${link.label}” already has the ${LANGUAGE_LABELS[single.source]} name “${taken}”. Use Alias of or Version of instead.`,
 					);
 				}
-				await fileByScript(keyword);
-				await fileByScript(draft.link);
-				await postKeywordsByIdLink(keyword.id, { targetId: draft.link.id });
+				if (link.kind === "alias") {
+					// The row becomes the alias's name in its language, then is merged away.
+					await postKeywordsByIdLinkAlias(keyword.id, { aliasId: link.id });
+				} else {
+					// Linking merges names by column, so both must be in the right one.
+					await fileByScript(keyword);
+					await fileByScript(link);
+					await postKeywordsByIdLink(keyword.id, { targetId: link.id });
+				}
 			} else if (draft.alias) {
 				await postKeywordsByIdAlias(keyword.id, { targetId: draft.alias.id });
 			} else if (draft.version) {
@@ -472,8 +488,7 @@ export function MatchTranslationsPage() {
 		}
 	};
 
-	const refresh = () =>
-		queryClient.invalidateQueries({ queryKey: getGetKeywordsQueryKey() });
+	const refresh = () => refreshKeywords(queryClient, novelId);
 
 	const saveMany = async (targets: Keyword[]) => {
 		let saved = 0;
@@ -745,6 +760,7 @@ export function MatchTranslationsPage() {
 														<KeywordPicker
 															novelId={novelId}
 															excludeId={keyword.id}
+															mode="link"
 															label={`Link ${name} to its ${LANGUAGE_LABELS[target]} keyword`}
 															placeholder="Search keywords…"
 															value={draft.link}
@@ -760,6 +776,7 @@ export function MatchTranslationsPage() {
 														<KeywordPicker
 															novelId={novelId}
 															excludeId={keyword.id}
+															mode="parent"
 															label={`Make ${name} an alias of`}
 															value={draft.alias}
 															disabled={
@@ -774,6 +791,7 @@ export function MatchTranslationsPage() {
 														<KeywordPicker
 															novelId={novelId}
 															excludeId={keyword.id}
+															mode="parent"
 															label={`Make ${name} a version of`}
 															value={draft.version}
 															disabled={

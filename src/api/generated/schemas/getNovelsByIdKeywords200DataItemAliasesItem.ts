@@ -5,6 +5,8 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
+import type { GetNovelsByIdKeywords200DataItemAliasesItemNameAr } from './getNovelsByIdKeywords200DataItemAliasesItemNameAr';
+import type { GetNovelsByIdKeywords200DataItemAliasesItemNameEn } from './getNovelsByIdKeywords200DataItemAliasesItemNameEn';
 import type { GetNovelsByIdKeywords200DataItemAliasesItemDescription } from './getNovelsByIdKeywords200DataItemAliasesItemDescription';
 import type { GetNovelsByIdKeywords200DataItemAliasesItemMatchingType } from './getNovelsByIdKeywords200DataItemAliasesItemMatchingType';
 import type { GetNovelsByIdKeywords200DataItemAliasesItemCategoryId } from './getNovelsByIdKeywords200DataItemAliasesItemCategoryId';
@@ -20,6 +22,8 @@ import type { GetNovelsByIdKeywords200DataItemAliasesItemImage } from './getNove
 export type GetNovelsByIdKeywords200DataItemAliasesItem = {
   id: string;
   name: string;
+  nameAr: GetNovelsByIdKeywords200DataItemAliasesItemNameAr;
+  nameEn: GetNovelsByIdKeywords200DataItemAliasesItemNameEn;
   description: GetNovelsByIdKeywords200DataItemAliasesItemDescription;
   matchingType: GetNovelsByIdKeywords200DataItemAliasesItemMatchingType;
   overrideStyle: boolean;

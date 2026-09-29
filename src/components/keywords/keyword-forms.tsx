@@ -25,6 +25,13 @@ import {
 	startOf,
 	styleName,
 } from "@/lib/keyword-details";
+import {
+	aliasNames,
+	LANGUAGE_LABELS,
+	type Language,
+	otherLanguage,
+	scriptLanguage,
+} from "@/lib/translation";
 
 type StyleValues = {
 	description: string;
@@ -349,6 +356,15 @@ export function AliasForm({
 	onDone: () => void;
 }) {
 	const [name, setName] = useState(alias?.name ?? "");
+	// The name's script picks its language; the translation is the other one.
+	const nameLanguage: Language = scriptLanguage(name) ?? "en";
+	const translationLanguage = otherLanguage(nameLanguage);
+	const [translation, setTranslation] = useState(() => {
+		if (!alias) return "";
+		const names = aliasNames(alias);
+		const own = scriptLanguage(alias.name) ?? "en";
+		return names[otherLanguage(own)] ?? "";
+	});
 	const [fullWord, setFullWord] = useState(
 		(alias?.matchingType ?? "FULL") === "FULL",
 	);
@@ -362,8 +378,13 @@ export function AliasForm({
 	const submit = async () => {
 		const trimmed = name.trim();
 		if (!trimmed) return setError("Enter the alias name.");
+		const names: Record<Language, string | null> = { ar: null, en: null };
+		names[nameLanguage] = trimmed;
+		names[translationLanguage] = translation.trim() || null;
 		const body = {
 			name: trimmed,
+			nameAr: names.ar,
+			nameEn: names.en,
 			matchingType: fullWord ? ("FULL" as const) : ("PARTIAL" as const),
 			overrideStyle,
 			...styleBody(style),
@@ -394,6 +415,19 @@ export function AliasForm({
 					maxLength={300}
 					value={name}
 					onChange={(event) => setName(event.target.value)}
+				/>
+			</Field>
+			<Field
+				label={`${LANGUAGE_LABELS[translationLanguage]} name`}
+				hint={`The alias in ${LANGUAGE_LABELS[translationLanguage]}, highlighted on ${LANGUAGE_LABELS[translationLanguage]} pages too.`}
+			>
+				<input
+					className="input"
+					dir={translationLanguage === "ar" ? "rtl" : "ltr"}
+					lang={translationLanguage}
+					maxLength={300}
+					value={translation}
+					onChange={(event) => setTranslation(event.target.value)}
 				/>
 			</Field>
 			<FullWordToggle checked={fullWord} onChange={setFullWord} />

@@ -5,6 +5,8 @@
  * Development documentation
  * OpenAPI spec version: 0.0.0
  */
+import type { PutKeywordAliasesById200NameAr } from './putKeywordAliasesById200NameAr';
+import type { PutKeywordAliasesById200NameEn } from './putKeywordAliasesById200NameEn';
 import type { PutKeywordAliasesById200Description } from './putKeywordAliasesById200Description';
 import type { PutKeywordAliasesById200MatchingType } from './putKeywordAliasesById200MatchingType';
 import type { PutKeywordAliasesById200CategoryId } from './putKeywordAliasesById200CategoryId';
@@ -20,6 +22,8 @@ import type { PutKeywordAliasesById200Image } from './putKeywordAliasesById200Im
 export type PutKeywordAliasesById200 = {
   id: string;
   name: string;
+  nameAr: PutKeywordAliasesById200NameAr;
+  nameEn: PutKeywordAliasesById200NameEn;
   description: PutKeywordAliasesById200Description;
   matchingType: PutKeywordAliasesById200MatchingType;
   overrideStyle: boolean;
