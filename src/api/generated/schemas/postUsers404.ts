@@ -8,4 +8,5 @@
 
 export type PostUsers404 = {
   message: string;
+  code?: string;
 };

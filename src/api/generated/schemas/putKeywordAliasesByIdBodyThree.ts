@@ -14,11 +14,6 @@ import type { PutKeywordAliasesByIdBodyThreeNameEn } from './putKeywordAliasesBy
 import type { PutKeywordAliasesByIdBodyThreeMatchingType } from './putKeywordAliasesByIdBodyThreeMatchingType';
 
 export type PutKeywordAliasesByIdBodyThree = {
-  /**
-   * @minLength 1
-   * @maxLength 300
-   */
-  name?: string;
   /** @nullable */
   description?: PutKeywordAliasesByIdBodyThreeDescription;
   /** @nullable */

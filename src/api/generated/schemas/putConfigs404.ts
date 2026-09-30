@@ -8,4 +8,5 @@
 
 export type PutConfigs404 = {
   message: string;
+  code?: string;
 };

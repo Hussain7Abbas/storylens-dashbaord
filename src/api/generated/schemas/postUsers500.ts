@@ -8,4 +8,5 @@
 
 export type PostUsers500 = {
   message: string;
+  code?: string;
 };

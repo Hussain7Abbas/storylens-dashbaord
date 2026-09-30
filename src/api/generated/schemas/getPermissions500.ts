@@ -8,4 +8,5 @@
 
 export type GetPermissions500 = {
   message: string;
+  code?: string;
 };

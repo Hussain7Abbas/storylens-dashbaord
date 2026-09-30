@@ -8,4 +8,5 @@
 
 export type GetStats404 = {
   message: string;
+  code?: string;
 };

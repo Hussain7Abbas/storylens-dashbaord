@@ -25,13 +25,6 @@ import {
 	startOf,
 	styleName,
 } from "@/lib/keyword-details";
-import {
-	aliasNames,
-	LANGUAGE_LABELS,
-	type Language,
-	otherLanguage,
-	scriptLanguage,
-} from "@/lib/translation";
 
 type StyleValues = {
 	description: string;
@@ -355,16 +348,10 @@ export function AliasForm({
 	options: StyleOptions;
 	onDone: () => void;
 }) {
-	const [name, setName] = useState(alias?.name ?? "");
-	// The name's script picks its language; the translation is the other one.
-	const nameLanguage: Language = scriptLanguage(name) ?? "en";
-	const translationLanguage = otherLanguage(nameLanguage);
-	const [translations, setTranslations] = useState<Record<Language, string>>(
-		() => {
-			const names = alias ? aliasNames(alias) : { ar: null, en: null };
-			return { ar: names.ar ?? "", en: names.en ?? "" };
-		},
-	);
+	const [names, setNames] = useState({
+		nameAr: alias?.nameAr ?? "",
+		nameEn: alias?.nameEn ?? "",
+	});
 	const [fullWord, setFullWord] = useState(
 		(alias?.matchingType ?? "FULL") === "FULL",
 	);
@@ -376,22 +363,12 @@ export function AliasForm({
 	const { busy, error, setError, run } = useSave(keyword.novelId, onDone);
 
 	const submit = async () => {
-		const trimmed = name.trim();
-		if (!trimmed) return setError("Enter the alias name.");
-		const names: Record<Language, string | null> = { ar: null, en: null };
-		names[nameLanguage] = trimmed;
-		const translated = translations[translationLanguage].trim();
-		const detected = scriptLanguage(translated);
-		if (detected && detected !== translationLanguage) {
-			return setError(
-				`Enter the translation in ${LANGUAGE_LABELS[translationLanguage]}.`,
-			);
-		}
-		names[translationLanguage] = translated || null;
+		const nameAr = names.nameAr.trim() || null;
+		const nameEn = names.nameEn.trim() || null;
+		if (!nameAr && !nameEn) return setError("Enter an Arabic or English name.");
 		const body = {
-			name: trimmed,
-			nameAr: names.ar,
-			nameEn: names.en,
+			nameAr,
+			nameEn,
 			matchingType: fullWord ? ("FULL" as const) : ("PARTIAL" as const),
 			overrideStyle,
 			...styleBody(style),
@@ -414,34 +391,35 @@ export function AliasForm({
 			error={error}
 			submitLabel={alias ? "Save changes" : "Add alias"}
 		>
-			<Field label="Alias name" hint="Another name the character goes by.">
-				<input
-					className="input"
-					dir="auto"
-					required
-					maxLength={300}
-					value={name}
-					onChange={(event) => setName(event.target.value)}
-				/>
-			</Field>
-			<Field
-				label={`${LANGUAGE_LABELS[translationLanguage]} name`}
-				hint={`The alias in ${LANGUAGE_LABELS[translationLanguage]}, highlighted on ${LANGUAGE_LABELS[translationLanguage]} pages too.`}
-			>
-				<input
-					className="input"
-					dir={translationLanguage === "ar" ? "rtl" : "ltr"}
-					lang={translationLanguage}
-					maxLength={300}
-					value={translations[translationLanguage]}
-					onChange={(event) =>
-						setTranslations({
-							...translations,
-							[translationLanguage]: event.target.value,
-						})
-					}
-				/>
-			</Field>
+			<p className="text-sm text-muted">
+				Another name the character goes by, highlighted on pages in each
+				language it is named in.
+			</p>
+			<div className="grid gap-4 sm:grid-cols-2">
+				<Field label="Arabic name">
+					<input
+						className="input"
+						dir="rtl"
+						lang="ar"
+						maxLength={300}
+						value={names.nameAr}
+						onChange={(event) =>
+							setNames({ ...names, nameAr: event.target.value })
+						}
+					/>
+				</Field>
+				<Field label="English name">
+					<input
+						className="input"
+						lang="en"
+						maxLength={300}
+						value={names.nameEn}
+						onChange={(event) =>
+							setNames({ ...names, nameEn: event.target.value })
+						}
+					/>
+				</Field>
+			</div>
 			<FullWordToggle checked={fullWord} onChange={setFullWord} />
 			<label className="flex items-start gap-3 text-sm">
 				<input

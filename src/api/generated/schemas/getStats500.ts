@@ -8,4 +8,5 @@
 
 export type GetStats500 = {
   message: string;
+  code?: string;
 };

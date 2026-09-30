@@ -8,4 +8,5 @@
 
 export type GetRolesById500 = {
   message: string;
+  code?: string;
 };

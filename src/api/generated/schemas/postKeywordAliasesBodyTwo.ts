@@ -15,11 +15,6 @@ import type { PostKeywordAliasesBodyTwoMatchingType } from './postKeywordAliases
 
 export type PostKeywordAliasesBodyTwo = {
   keywordId: string;
-  /**
-   * @minLength 1
-   * @maxLength 300
-   */
-  name: string;
   /** @nullable */
   description?: PostKeywordAliasesBodyTwoDescription;
   /** @nullable */

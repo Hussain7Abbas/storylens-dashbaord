@@ -8,4 +8,5 @@
 
 export type GetUsersById500 = {
   message: string;
+  code?: string;
 };

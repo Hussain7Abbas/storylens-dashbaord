@@ -8,4 +8,5 @@
 
 export type PostKeywordsByIdLink404 = {
   message: string;
+  code?: string;
 };

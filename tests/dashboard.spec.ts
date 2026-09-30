@@ -480,7 +480,7 @@ test("character actions add an alias and a version, edit and delete", async ({
 
 	await page.getByRole("button", { name: "Add an alias to ميرا" }).click();
 	let dialog = page.getByRole("dialog", { name: "Add an alias to ميرا" });
-	await dialog.getByLabel("Alias name").fill("The Keeper");
+	await dialog.getByLabel("English name").fill("The Keeper");
 	await dialog.getByRole("button", { name: "Add alias" }).click();
 	await expect(page.getByText("Alias added")).toBeVisible();
 	expect(requests).toContainEqual(
@@ -489,7 +489,8 @@ test("character actions add an alias and a version, edit and delete", async ({
 			path: "/api/admin/keyword-aliases/",
 			body: expect.objectContaining({
 				keywordId: KEYWORD_IDS.mira,
-				name: "The Keeper",
+				nameAr: null,
+				nameEn: "The Keeper",
 				matchingType: "FULL",
 			}),
 		}),
@@ -668,7 +669,6 @@ test("an alias's translation is edited on the novel profile", async ({
 			method: "PUT",
 			path: "/api/admin/keyword-aliases/alias-mira-vale",
 			body: expect.objectContaining({
-				name: "Mira Vale",
 				nameAr: "ميرا فيل",
 				nameEn: "Mira Vale",
 			}),
@@ -676,7 +676,7 @@ test("an alias's translation is edited on the novel profile", async ({
 	);
 });
 
-test("changing an alias's primary language keeps each translation in its own field", async ({
+test("renaming an alias in one language keeps the other language's name", async ({
 	page,
 }) => {
 	const profileKeywords = structuredClone(keywordDetails);
@@ -688,7 +688,7 @@ test("changing an alias's primary language keeps each translation in its own fie
 	await page.goto(`/novels/${novels[0]?.id}`);
 	await page.getByRole("button", { name: "Edit alias Mira Vale" }).click();
 	const dialog = page.getByRole("dialog", { name: "Edit alias" });
-	await dialog.getByLabel("Alias name").fill("ميرا الجديدة");
+	await dialog.getByLabel("Arabic name").fill("ميرا الجديدة");
 	await expect(dialog.getByLabel("English name")).toHaveValue("Mira Vale");
 	await dialog.getByRole("button", { name: "Save changes" }).click();
 	await expect(page.getByText("Alias updated")).toBeVisible();
@@ -697,7 +697,6 @@ test("changing an alias's primary language keeps each translation in its own fie
 			method: "PUT",
 			path: "/api/admin/keyword-aliases/alias-mira-vale",
 			body: expect.objectContaining({
-				name: "ميرا الجديدة",
 				nameAr: "ميرا الجديدة",
 				nameEn: "Mira Vale",
 			}),

@@ -15,11 +15,6 @@ import type { PostKeywordAliasesBodyThreeMatchingType } from './postKeywordAlias
 
 export type PostKeywordAliasesBodyThree = {
   keywordId: string;
-  /**
-   * @minLength 1
-   * @maxLength 300
-   */
-  name: string;
   /** @nullable */
   description?: PostKeywordAliasesBodyThreeDescription;
   /** @nullable */

@@ -8,4 +8,5 @@
 
 export type DeleteUsersById500 = {
   message: string;
+  code?: string;
 };

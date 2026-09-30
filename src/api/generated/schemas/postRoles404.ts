@@ -8,4 +8,5 @@
 
 export type PostRoles404 = {
   message: string;
+  code?: string;
 };

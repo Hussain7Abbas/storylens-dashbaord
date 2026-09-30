@@ -8,4 +8,5 @@
 
 export type GetConfigsByKey404 = {
   message: string;
+  code?: string;
 };

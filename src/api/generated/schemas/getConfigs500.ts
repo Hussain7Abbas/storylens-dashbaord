@@ -8,4 +8,5 @@
 
 export type GetConfigs500 = {
   message: string;
+  code?: string;
 };

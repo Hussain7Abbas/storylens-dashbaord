@@ -21,7 +21,6 @@ import type { GetNovelsByIdKeywords200DataItemAliasesItemImage } from './getNove
 
 export type GetNovelsByIdKeywords200DataItemAliasesItem = {
   id: string;
-  name: string;
   nameAr: GetNovelsByIdKeywords200DataItemAliasesItemNameAr;
   nameEn: GetNovelsByIdKeywords200DataItemAliasesItemNameEn;
   description: GetNovelsByIdKeywords200DataItemAliasesItemDescription;

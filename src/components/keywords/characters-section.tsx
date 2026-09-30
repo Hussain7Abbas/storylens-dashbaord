@@ -43,7 +43,7 @@ import {
 } from "@/lib/keyword-details";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
-	aliasNames,
+	bothNames,
 	LANGUAGE_LABELS,
 	type Language,
 	namesByScript,
@@ -104,11 +104,7 @@ function toRow(keyword: KeywordDetail): Row {
 	const nameText = [
 		names.ar,
 		names.en,
-		...keyword.aliases.flatMap((alias) => [
-			alias.name,
-			alias.nameAr,
-			alias.nameEn,
-		]),
+		...keyword.aliases.flatMap((alias) => [alias.nameAr, alias.nameEn]),
 	].flatMap((name) => (name ? [normalizeForSearch(name)] : []));
 	return {
 		keyword,
@@ -815,11 +811,11 @@ export function CharactersSection({
 													);
 												})}
 											{keyword.aliases.map((alias) => {
-												const names = aliasNames(alias);
-												const translations = [names.ar, names.en].filter(
-													(item): item is string =>
-														!!item && item !== alias.name,
-												);
+												const names = {
+													ar: alias.nameAr ?? null,
+													en: alias.nameEn ?? null,
+												};
+												const label = bothNames(alias);
 												return (
 													<tr key={alias.id} className="bg-wash/40">
 														<td>
@@ -833,7 +829,7 @@ export function CharactersSection({
 																<Thumbnail
 																	small
 																	image={alias.image}
-																	label={alias.name}
+																	label={label}
 																/>
 															</div>
 														</td>
@@ -841,18 +837,18 @@ export function CharactersSection({
 															<p className="text-xs font-semibold text-muted uppercase">
 																Alias
 															</p>
-															<p className="text-sm" dir="auto">
-																{alias.name}
-															</p>
-															{translations.map((item) => (
-																<p
-																	key={item}
-																	className="text-xs text-muted"
-																	dir="auto"
-																>
-																	{item}
-																</p>
-															))}
+															{[names.en, names.ar].map(
+																(item) =>
+																	item && (
+																		<p
+																			key={item}
+																			className="text-sm"
+																			dir="auto"
+																		>
+																			{item}
+																		</p>
+																	),
+															)}
 														</td>
 														<td>
 															<Languages names={names} />
@@ -892,7 +888,7 @@ export function CharactersSection({
 															<div className="flex gap-1">
 																{can(PERMISSIONS.aliases.update) && (
 																	<IconAction
-																		label={`Edit alias ${alias.name}`}
+																		label={`Edit alias ${label}`}
 																		title="Edit alias"
 																		icon={icon(Pencil)}
 																		onClick={() =>
@@ -906,7 +902,7 @@ export function CharactersSection({
 																)}
 																{can(PERMISSIONS.aliases.delete) && (
 																	<IconAction
-																		label={`Delete alias ${alias.name}`}
+																		label={`Delete alias ${label}`}
 																		title="Delete alias"
 																		danger
 																		icon={icon(Trash2)}
@@ -1023,7 +1019,7 @@ export function CharactersSection({
 				{deleting?.kind === "alias" && (
 					<span>
 						The alias{" "}
-						<strong className="text-ink">{deleting.alias.name}</strong>{" "}
+						<strong className="text-ink">{bothNames(deleting.alias)}</strong>{" "}
 						<span>
 							of {labelOf(deleting.keyword)} will no longer be highlighted.
 						</span>

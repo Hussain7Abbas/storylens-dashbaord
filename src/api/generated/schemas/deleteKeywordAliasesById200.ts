@@ -21,7 +21,6 @@ import type { DeleteKeywordAliasesById200Image } from './deleteKeywordAliasesByI
 
 export type DeleteKeywordAliasesById200 = {
   id: string;
-  name: string;
   nameAr: DeleteKeywordAliasesById200NameAr;
   nameEn: DeleteKeywordAliasesById200NameEn;
   description: DeleteKeywordAliasesById200Description;

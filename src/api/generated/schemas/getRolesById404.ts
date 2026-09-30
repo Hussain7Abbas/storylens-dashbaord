@@ -8,4 +8,5 @@
 
 export type GetRolesById404 = {
   message: string;
+  code?: string;
 };
