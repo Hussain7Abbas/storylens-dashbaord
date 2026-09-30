@@ -522,7 +522,12 @@ test("character actions add an alias and a version, edit and delete", async ({
 	expect(requests).toContainEqual({
 		method: "PUT",
 		path: `/api/admin/keywords/${KEYWORD_IDS.mira}`,
-		body: { nameAr: "ميرا", nameEn: "Mira the Keeper", matchingType: "FULL" },
+		body: {
+			nameAr: "ميرا",
+			nameEn: "Mira the Keeper",
+			matchingType: "FULL",
+			fuzzyMatchArabicCharacters: true,
+		},
 	});
 	expect(requests).toContainEqual(
 		expect.objectContaining({
@@ -577,10 +582,82 @@ test("a new keyword is created with its base details", async ({ page }) => {
 			nameAr: null,
 			nameEn: "Old Bell",
 			matchingType: "PARTIAL",
+			fuzzyMatchArabicCharacters: true,
 			description: "Rings at dawn",
 			categoryId: "cat-person",
 			natureId: null,
 			imageId: null,
+		},
+	});
+});
+
+test("Arabic names offer alif variant matching, on by default", async ({
+	page,
+}) => {
+	const requests = await mockApi(page, { signedIn: true });
+	await page.goto(`/novels/${novels[0]?.id}`);
+	await page.getByRole("button", { name: "New keyword" }).click();
+	const dialog = page.getByRole("dialog", { name: "New keyword" });
+	const variants = dialog.getByLabel("Fuzzy Match Arabic Characters Variants");
+	await dialog.getByLabel("English name").fill("Amal");
+	await expect(variants).toHaveCount(0);
+	await dialog.getByLabel("Arabic name").fill("أمل");
+	await expect(variants).toBeChecked();
+	await variants.uncheck();
+	await dialog.getByRole("button", { name: "Create keyword" }).click();
+	await expect(page.getByText("Keyword created")).toBeVisible();
+	expect(requests).toContainEqual(
+		expect.objectContaining({
+			method: "POST",
+			path: "/api/admin/keywords/",
+			body: expect.objectContaining({
+				nameAr: "أمل",
+				nameEn: "Amal",
+				fuzzyMatchArabicCharacters: false,
+			}),
+		}),
+	);
+
+	await page.getByRole("button", { name: "Add an alias to ميرا" }).click();
+	const alias = page.getByRole("dialog", { name: "Add an alias to ميرا" });
+	await alias.getByLabel("Arabic name").fill("إميرا");
+	await expect(
+		alias.getByLabel("Fuzzy Match Arabic Characters Variants"),
+	).toBeChecked();
+	await alias.getByRole("button", { name: "Add alias" }).click();
+	await expect(page.getByText("Alias added")).toBeVisible();
+	expect(requests).toContainEqual(
+		expect.objectContaining({
+			method: "POST",
+			path: "/api/admin/keyword-aliases/",
+			body: expect.objectContaining({
+				nameAr: "إميرا",
+				fuzzyMatchArabicCharacters: true,
+			}),
+		}),
+	);
+});
+
+test("editing keeps a keyword's saved alif variant setting", async ({
+	page,
+}) => {
+	const requests = await mockApi(page, { signedIn: true });
+	await page.goto(`/novels/${novels[0]?.id}`);
+	await page.getByRole("button", { name: "Edit الفانوس", exact: true }).click();
+	const dialog = page.getByRole("dialog", { name: "Edit الفانوس" });
+	await expect(
+		dialog.getByLabel("Fuzzy Match Arabic Characters Variants"),
+	).not.toBeChecked();
+	await dialog.getByRole("button", { name: "Save changes" }).click();
+	await expect(page.getByText("Keyword updated")).toBeVisible();
+	expect(requests).toContainEqual({
+		method: "PUT",
+		path: `/api/admin/keywords/${KEYWORD_IDS.lanternAr}`,
+		body: {
+			nameAr: "الفانوس",
+			nameEn: null,
+			matchingType: "PARTIAL",
+			fuzzyMatchArabicCharacters: false,
 		},
 	});
 });
