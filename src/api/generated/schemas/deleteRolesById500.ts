@@ -8,4 +8,5 @@
 
 export type DeleteRolesById500 = {
   message: string;
+  code?: string;
 };

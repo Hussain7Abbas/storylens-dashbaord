@@ -8,4 +8,5 @@
 
 export type PutRolesById404 = {
   message: string;
+  code?: string;
 };

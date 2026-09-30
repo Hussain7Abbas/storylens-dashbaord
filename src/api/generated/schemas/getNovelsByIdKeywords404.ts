@@ -8,4 +8,5 @@
 
 export type GetNovelsByIdKeywords404 = {
   message: string;
+  code?: string;
 };

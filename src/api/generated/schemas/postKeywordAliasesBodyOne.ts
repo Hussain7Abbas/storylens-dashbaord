@@ -15,11 +15,6 @@ import type { PostKeywordAliasesBodyOneMatchingType } from './postKeywordAliases
 
 export type PostKeywordAliasesBodyOne = {
   keywordId: string;
-  /**
-   * @minLength 1
-   * @maxLength 300
-   */
-  name: string;
   /** @nullable */
   description?: PostKeywordAliasesBodyOneDescription;
   /** @nullable */

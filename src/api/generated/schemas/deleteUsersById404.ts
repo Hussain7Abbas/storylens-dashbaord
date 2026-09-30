@@ -8,4 +8,5 @@
 
 export type DeleteUsersById404 = {
   message: string;
+  code?: string;
 };

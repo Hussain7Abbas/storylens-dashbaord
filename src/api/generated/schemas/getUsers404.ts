@@ -8,4 +8,5 @@
 
 export type GetUsers404 = {
   message: string;
+  code?: string;
 };

@@ -8,4 +8,5 @@
 
 export type PutUsersById404 = {
   message: string;
+  code?: string;
 };

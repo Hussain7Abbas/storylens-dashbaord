@@ -8,4 +8,5 @@
 
 export type PostKeywordsByIdLinkAlias500 = {
   message: string;
+  code?: string;
 };

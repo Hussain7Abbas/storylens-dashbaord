@@ -70,29 +70,3 @@ export function singleName(
 		target: otherLanguage(source),
 	};
 }
-
-type AliasNamed = {
-	name: string;
-	nameAr?: string | null;
-	nameEn?: string | null;
-};
-
-/**
- * An alias's name in each language (mirrors the backend's `aliasNames`):
- * `nameAr`/`nameEn` when set, and `name` fills its script's language on older
- * aliases that have neither.
- */
-export function aliasNames(alias: AliasNamed): Record<Language, string | null> {
-	const names: Record<Language, string | null> = {
-		ar: alias.nameAr || null,
-		en: alias.nameEn || null,
-	};
-	const language = scriptLanguage(alias.name);
-	if (
-		language &&
-		!names[language] &&
-		!Object.values(names).includes(alias.name)
-	)
-		names[language] = alias.name;
-	return names;
-}

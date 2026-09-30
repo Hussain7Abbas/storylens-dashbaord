@@ -14,11 +14,6 @@ import type { PutKeywordAliasesByIdBodyTwoNameEn } from './putKeywordAliasesById
 import type { PutKeywordAliasesByIdBodyTwoMatchingType } from './putKeywordAliasesByIdBodyTwoMatchingType';
 
 export type PutKeywordAliasesByIdBodyTwo = {
-  /**
-   * @minLength 1
-   * @maxLength 300
-   */
-  name?: string;
   /** @nullable */
   description?: PutKeywordAliasesByIdBodyTwoDescription;
   /** @nullable */

@@ -12,7 +12,7 @@ import {
 import type { GetNovelsByIdKeywords200DataItem } from "@/api/generated/schemas";
 import { fuzzyScore, normalizeForSearch } from "@/lib/fuzzy";
 import { useNovelKeywords } from "@/lib/novel-keywords";
-import { aliasNames, bothNames } from "@/lib/translation";
+import { bothNames } from "@/lib/translation";
 import { Spinner } from "./spinner";
 
 /** A keyword, or (from a Link picker) an alias of `keywordId`. */
@@ -57,16 +57,12 @@ function keywordEntry(
 		nameAr: keyword.nameAr,
 		nameEn: keyword.nameEn,
 		detail: withAliases
-			? keyword.aliases.map((alias) => alias.name).join(", ") || null
+			? keyword.aliases.map((alias) => bothNames(alias)).join(", ") || null
 			: null,
 		texts: normalized([keyword.nameAr, keyword.nameEn]),
 		aliasTexts: withAliases
 			? normalized(
-					keyword.aliases.flatMap((alias) => [
-						alias.name,
-						alias.nameAr,
-						alias.nameEn,
-					]),
+					keyword.aliases.flatMap((alias) => [alias.nameAr, alias.nameEn]),
 				)
 			: [],
 	};
@@ -74,16 +70,15 @@ function keywordEntry(
 
 function aliasEntries(keyword: GetNovelsByIdKeywords200DataItem): Entry[] {
 	return keyword.aliases.map((alias) => {
-		const names = aliasNames(alias);
 		return {
 			kind: "alias",
 			id: alias.id,
 			keywordId: keyword.id,
-			label: bothNames({ nameAr: names.ar, nameEn: names.en }) || alias.name,
-			nameAr: names.ar,
-			nameEn: names.en,
+			label: bothNames(alias),
+			nameAr: alias.nameAr ?? null,
+			nameEn: alias.nameEn ?? null,
 			detail: `Alias of ${bothNames(keyword)}`,
-			texts: normalized([alias.name, names.ar, names.en]),
+			texts: normalized([alias.nameAr, alias.nameEn]),
 			aliasTexts: [],
 		};
 	});

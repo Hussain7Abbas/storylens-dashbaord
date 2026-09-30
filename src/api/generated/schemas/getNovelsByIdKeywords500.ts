@@ -8,4 +8,5 @@
 
 export type GetNovelsByIdKeywords500 = {
   message: string;
+  code?: string;
 };

@@ -21,7 +21,6 @@ import type { PostKeywordAliases200Image } from './postKeywordAliases200Image';
 
 export type PostKeywordAliases200 = {
   id: string;
-  name: string;
   nameAr: PostKeywordAliases200NameAr;
   nameEn: PostKeywordAliases200NameEn;
   description: PostKeywordAliases200Description;

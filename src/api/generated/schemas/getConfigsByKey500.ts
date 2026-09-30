@@ -8,4 +8,5 @@
 
 export type GetConfigsByKey500 = {
   message: string;
+  code?: string;
 };
