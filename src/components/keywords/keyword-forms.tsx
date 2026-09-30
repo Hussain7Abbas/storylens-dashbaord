@@ -233,6 +233,33 @@ function FullWordToggle({
 	);
 }
 
+function FuzzyArabicToggle({
+	checked,
+	onChange,
+}: {
+	checked: boolean;
+	onChange: (checked: boolean) => void;
+}) {
+	return (
+		<label className="flex items-start gap-3 text-sm">
+			<input
+				type="checkbox"
+				className="mt-1 size-4 accent-[var(--accent)]"
+				checked={checked}
+				onChange={(event) => onChange(event.target.checked)}
+			/>
+			<span>
+				<span className="block font-semibold">
+					Fuzzy Match Arabic Characters Variants
+				</span>
+				<span className="block text-xs text-muted">
+					Treat ا, أ, إ, آ and ٱ as the same letter when highlighting.
+				</span>
+			</span>
+		</label>
+	);
+}
+
 /**
  * Names and matching of the keyword, plus its base version's details. Without
  * `keyword` it creates one in `novelId`, base version included.
@@ -256,6 +283,9 @@ export function KeywordForm({
 	const [fullWord, setFullWord] = useState(
 		(keyword?.matchingType ?? "FULL") === "FULL",
 	);
+	const [fuzzyMatchArabicCharacters, setFuzzyMatchArabicCharacters] = useState(
+		keyword?.fuzzyMatchArabicCharacters ?? true,
+	);
 	const [style, setStyle] = useState(styleValues(base));
 	const [uploading, setUploading] = useState(false);
 	const { busy, error, setError, run } = useSave(novelId, onDone);
@@ -273,6 +303,7 @@ export function KeywordForm({
 						nameAr,
 						nameEn,
 						matchingType,
+						fuzzyMatchArabicCharacters,
 						...styleBody(style),
 					}),
 				"Keyword created",
@@ -280,7 +311,12 @@ export function KeywordForm({
 			return;
 		}
 		await run(async () => {
-			await putKeywordsById(keyword.id, { nameAr, nameEn, matchingType });
+			await putKeywordsById(keyword.id, {
+				nameAr,
+				nameEn,
+				matchingType,
+				fuzzyMatchArabicCharacters,
+			});
 			if (base) await putKeywordVersionsById(base.id, styleBody(style));
 			else
 				await postKeywordVersions({
@@ -326,6 +362,13 @@ export function KeywordForm({
 				</Field>
 			</div>
 			<FullWordToggle checked={fullWord} onChange={setFullWord} />
+			{(/\p{Script=Arabic}/u.test(names.nameAr) ||
+				/\p{Script=Arabic}/u.test(names.nameEn)) && (
+				<FuzzyArabicToggle
+					checked={fuzzyMatchArabicCharacters}
+					onChange={setFuzzyMatchArabicCharacters}
+				/>
+			)}
 			<StyleFields
 				values={style}
 				onChange={setStyle}
@@ -355,6 +398,9 @@ export function AliasForm({
 	const [fullWord, setFullWord] = useState(
 		(alias?.matchingType ?? "FULL") === "FULL",
 	);
+	const [fuzzyMatchArabicCharacters, setFuzzyMatchArabicCharacters] = useState(
+		alias?.fuzzyMatchArabicCharacters ?? true,
+	);
 	const [overrideStyle, setOverrideStyle] = useState(
 		alias?.overrideStyle ?? false,
 	);
@@ -370,6 +416,7 @@ export function AliasForm({
 			nameAr,
 			nameEn,
 			matchingType: fullWord ? ("FULL" as const) : ("PARTIAL" as const),
+			fuzzyMatchArabicCharacters,
 			overrideStyle,
 			...styleBody(style),
 		};
@@ -421,6 +468,13 @@ export function AliasForm({
 				</Field>
 			</div>
 			<FullWordToggle checked={fullWord} onChange={setFullWord} />
+			{(/\p{Script=Arabic}/u.test(names.nameAr) ||
+				/\p{Script=Arabic}/u.test(names.nameEn)) && (
+				<FuzzyArabicToggle
+					checked={fuzzyMatchArabicCharacters}
+					onChange={setFuzzyMatchArabicCharacters}
+				/>
+			)}
 			<label className="flex items-start gap-3 text-sm">
 				<input
 					type="checkbox"

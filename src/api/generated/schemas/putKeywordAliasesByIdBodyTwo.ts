@@ -27,5 +27,6 @@ export type PutKeywordAliasesByIdBodyTwo = {
   /** @nullable */
   nameEn?: PutKeywordAliasesByIdBodyTwoNameEn;
   matchingType?: PutKeywordAliasesByIdBodyTwoMatchingType;
+  fuzzyMatchArabicCharacters?: boolean;
   overrideStyle?: boolean;
 };

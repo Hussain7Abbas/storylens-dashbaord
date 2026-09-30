@@ -27,5 +27,6 @@ export type PutKeywordAliasesByIdBodyThree = {
   /** @nullable */
   nameEn?: PutKeywordAliasesByIdBodyThreeNameEn;
   matchingType?: PutKeywordAliasesByIdBodyThreeMatchingType;
+  fuzzyMatchArabicCharacters?: boolean;
   overrideStyle?: boolean;
 };

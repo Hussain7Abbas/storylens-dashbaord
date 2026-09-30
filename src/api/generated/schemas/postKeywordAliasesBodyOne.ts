@@ -28,5 +28,6 @@ export type PostKeywordAliasesBodyOne = {
   /** @nullable */
   nameEn?: PostKeywordAliasesBodyOneNameEn;
   matchingType?: PostKeywordAliasesBodyOneMatchingType;
+  fuzzyMatchArabicCharacters?: boolean;
   overrideStyle?: boolean;
 };

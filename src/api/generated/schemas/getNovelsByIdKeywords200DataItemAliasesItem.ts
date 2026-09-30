@@ -25,6 +25,7 @@ export type GetNovelsByIdKeywords200DataItemAliasesItem = {
   nameEn: GetNovelsByIdKeywords200DataItemAliasesItemNameEn;
   description: GetNovelsByIdKeywords200DataItemAliasesItemDescription;
   matchingType: GetNovelsByIdKeywords200DataItemAliasesItemMatchingType;
+  fuzzyMatchArabicCharacters: boolean;
   overrideStyle: boolean;
   categoryId: GetNovelsByIdKeywords200DataItemAliasesItemCategoryId;
   natureId: GetNovelsByIdKeywords200DataItemAliasesItemNatureId;

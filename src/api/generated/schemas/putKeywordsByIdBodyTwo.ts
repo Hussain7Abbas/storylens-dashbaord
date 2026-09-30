@@ -15,4 +15,5 @@ export type PutKeywordsByIdBodyTwo = {
   /** @nullable */
   nameEn?: PutKeywordsByIdBodyTwoNameEn;
   matchingType?: PutKeywordsByIdBodyTwoMatchingType;
+  fuzzyMatchArabicCharacters?: boolean;
 };
