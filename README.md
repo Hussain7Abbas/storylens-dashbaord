@@ -35,6 +35,8 @@ Run the backend locally (`make dev` in `storylens-backend`). Other commands:
 
 The server checkout lives at `/srv/storylens-dashboard` on branch `main`. As root, `make sync` builds with Bun (Vite runs on the Node LTS in `/opt/storylens-node/bin`), copies `dist/` into a timestamped release under `/var/www/storylens-dashboard/releases`, swaps the `current` symlink, installs the Nginx site from `deploy/nginx/`, requests a Let's Encrypt certificate on the first run, checks `https://storylens-dashboard.iscoded.com/login` and rolls back on failure. The DNS record is a proxied Cloudflare A record to the same server as the website.
 
+`.github/workflows/deploy.yml` deploys the dashboard after the backend. When the backend's review-version watcher finishes a successful `make sync`, it sends a `backend-deployed` event to this repository. The workflow then sends `main`'s SHA over a command-restricted SSH key, and the server's `deploy/ci-ssh.sh` wrapper checks out that commit and runs `make deploy`. Pushes to `main` don't deploy on their own, and the workflow runs no checks, so run them locally first. To deploy by hand, run `gh workflow run deploy.yml -R Hussain7Abbas/storylens-dashboard` or `ssh raseen 'cd /srv/storylens-dashboard && make sync'`.
+
 ## License
 
 [PolyForm Noncommercial 1.0.0](LICENSE.md). The vendored UI UX Pro Max skill in `.claude/skills/ui-ux-pro-max` is MIT-licensed (see its `LICENSE`).

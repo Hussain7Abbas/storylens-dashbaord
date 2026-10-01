@@ -1,0 +1,36 @@
+name: Deploy production
+# The backend's review-version watcher dispatches `backend-deployed` after its own `make sync` succeeds.
+on:
+  repository_dispatch:
+    types: [backend-deployed]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: storylens-dashboard-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          SSH_PASSPHRASE: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # BatchMode cannot prompt, so decrypt the runner's copy of the key.
+          if [ -n "$SSH_PASSPHRASE" ]; then ssh-keygen -p -q -P "$SSH_PASSPHRASE" -N '' -f ~/.ssh/id_ed25519 >/dev/null; fi
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Rebuild and deploy main commit
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_COMMIT: ${{ github.sha }}
+        run: ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -p "${DEPLOY_PORT:-22}" "$DEPLOY_HOST" "deploy $DEPLOY_COMMIT"
