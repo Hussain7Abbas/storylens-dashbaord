@@ -49,6 +49,24 @@ export const PERMISSIONS = {
 		update: "PUT /api/admin/keyword-versions/:id",
 		delete: "DELETE /api/admin/keyword-versions/:id",
 	},
+	billing: {
+		requests: "GET /api/admin/billing/requests",
+		approve: "POST /api/admin/billing/requests/:id/approve",
+		reject: "POST /api/admin/billing/requests/:id/reject",
+		summary: "GET /api/admin/billing/summary",
+	},
+	lenses: {
+		history: "GET /api/admin/users/:id/lenses",
+		gift: "POST /api/admin/users/:id/lenses/gifts",
+		adjust: "POST /api/admin/users/:id/lenses/adjustments",
+	},
+	aiPricing: {
+		list: "GET /api/admin/ai-pricing/",
+		update: "PUT /api/admin/ai-pricing/:key",
+	},
+	aiModels: {
+		list: "GET /api/admin/ai-models/",
+	},
 	configs: {
 		list: "GET /api/admin/configs/",
 		save: "PUT /api/admin/configs/",

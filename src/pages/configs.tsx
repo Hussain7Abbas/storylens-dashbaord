@@ -13,12 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Dialog } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
-import {
-	EmptyState,
-	ErrorState,
-	PageHeader,
-	TableSkeleton,
-} from "@/components/ui/page";
+import { EmptyState, ErrorState, TableSkeleton } from "@/components/ui/page";
 import { SearchInput } from "@/components/ui/search-input";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/lib/auth";
@@ -31,6 +26,29 @@ type Config = GetConfigs200DataItem;
 const KNOWN_KEYS: Record<string, string> = {
 	Review_Version:
 		"Extension version waiting for Chrome Web Store review. The backend deploys itself once the store publishes it.",
+	Lens_Price_USD:
+		"Price of one lens in US dollars, up to 6 decimals (default 0.01). Missing or invalid: buying lenses is unavailable.",
+	Lens_Trial_Gift:
+		"Lenses each new registered reader gets once (default 10). 0 gives nothing and shows no celebration.",
+	Lens_Request_Min: "Smallest lens request, in whole lenses (default 100).",
+	Lens_Request_Max:
+		"Largest lens request, in whole lenses (default and maximum 50000).",
+	Lens_Pending_Requests_Max:
+		"Pending lens requests one reader may have at a time, 1–20 (default 3).",
+	AI_Text_Model:
+		"OpenRouter model for every text feature and the image brief. Choose it in the AI tab, which shows prices and whether lenses still cover the cost.",
+	AI_Image_Model:
+		"OpenRouter model that draws character images. Choose it in the AI tab.",
+	Billing_Notify_Email:
+		"Email that receives each new lens request with the reader’s WhatsApp or Telegram contact. Empty: DASHBOARD_ADMIN_EMAIL.",
+	AI_Cloud_Enabled:
+		"true turns Story Lens Cloud AI on; false answers every cloud AI request as unavailable (default false).",
+	AI_Daily_Spend_Cap_USD:
+		"Optional daily OpenRouter spending cap in US dollars (UTC days). Empty: no cap.",
+	AI_Reader_Max_Running:
+		"Cloud AI actions one reader may run at the same time, 1–10 (default 3).",
+	AI_Reader_Max_Per_10_Min:
+		"Cloud AI actions one reader may start in 10 minutes, 1–500 (default 30).",
 };
 
 function ConfigForm({
@@ -114,7 +132,8 @@ function ConfigForm({
 	);
 }
 
-export function ConfigsPage() {
+/** Settings → Configs: every key–value setting the API reads at runtime. */
+export function ConfigsPanel() {
 	const { can } = useAuth();
 	const toast = useToast();
 	const queryClient = useQueryClient();
@@ -151,11 +170,14 @@ export function ConfigsPage() {
 
 	return (
 		<>
-			<PageHeader
-				title="Configs"
-				description="Key–value settings the API reads at runtime."
-				actions={
-					can(PERMISSIONS.configs.save) && (
+			<div className="card">
+				<div className="flex flex-wrap items-center justify-between gap-3 border-b border-line p-4">
+					<SearchInput
+						label="Filter configs"
+						value={filter}
+						onChange={setFilter}
+					/>
+					{can(PERMISSIONS.configs.save) && (
 						<Button
 							variant="primary"
 							icon={<Plus size={16} strokeWidth={1.75} aria-hidden />}
@@ -163,16 +185,7 @@ export function ConfigsPage() {
 						>
 							New config
 						</Button>
-					)
-				}
-			/>
-			<div className="card">
-				<div className="border-b border-line p-4">
-					<SearchInput
-						label="Filter configs"
-						value={filter}
-						onChange={setFilter}
-					/>
+					)}
 				</div>
 				{configs.error ? (
 					<ErrorState
@@ -184,7 +197,7 @@ export function ConfigsPage() {
 				) : rows.length === 0 ? (
 					<EmptyState title={filter ? "No configs match" : "No configs yet"} />
 				) : (
-					<div className="overflow-x-auto">
+					<div className="relative overflow-x-auto">
 						<table className="data-table">
 							<thead>
 								<tr>

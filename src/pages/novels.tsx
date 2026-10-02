@@ -338,7 +338,7 @@ export function NovelsPage() {
 					<EmptyState title="No novels found">Try another search.</EmptyState>
 				) : (
 					<>
-						<div className="overflow-x-auto">
+						<div className="relative overflow-x-auto">
 							<table className="data-table">
 								<thead>
 									<tr>

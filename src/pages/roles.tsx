@@ -49,7 +49,7 @@ function RoleTable({
 	if (roles.length === 0) return <EmptyState title="No roles yet" />;
 
 	return (
-		<div className="overflow-x-auto">
+		<div className="relative overflow-x-auto">
 			<table className="data-table">
 				<thead>
 					<tr>

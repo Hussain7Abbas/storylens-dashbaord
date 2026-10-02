@@ -23,6 +23,7 @@ export type PostUsers200 = {
   image: PostUsers200Image;
   isGuest: boolean;
   isUser: boolean;
+  lensBalance: number;
   /** @nullable */
   userRoleId: PostUsers200UserRoleId;
   /** @nullable */

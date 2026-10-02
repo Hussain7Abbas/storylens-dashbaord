@@ -23,6 +23,7 @@ export type DeleteUsersById200 = {
   image: DeleteUsersById200Image;
   isGuest: boolean;
   isUser: boolean;
+  lensBalance: number;
   /** @nullable */
   userRoleId: DeleteUsersById200UserRoleId;
   /** @nullable */

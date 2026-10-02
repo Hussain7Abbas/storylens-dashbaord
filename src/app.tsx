@@ -13,7 +13,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
 import { AccountPage } from "@/pages/account";
-import { ConfigsPage } from "@/pages/configs";
+import { BillingRequestsPage } from "@/pages/billing-requests";
 import { LoginPage } from "@/pages/login";
 import { MatchTranslationsPage } from "@/pages/match-translations";
 import { NovelProfilePage } from "@/pages/novel-profile";
@@ -21,6 +21,7 @@ import { NovelsPage } from "@/pages/novels";
 import { OverviewPage } from "@/pages/overview";
 import { RoleEditorPage } from "@/pages/role-editor";
 import { RolesPage } from "@/pages/roles";
+import { SettingsPage } from "@/pages/settings";
 import { UsersPage } from "@/pages/users";
 
 function RequireAuth() {
@@ -66,7 +67,9 @@ function Home() {
 		[PERMISSIONS.roles.list, "/roles"],
 		[PERMISSIONS.novels.list, "/novels"],
 		[PERMISSIONS.keywords.list, "/translations"],
-		[PERMISSIONS.configs.list, "/configs"],
+		[PERMISSIONS.billing.requests, "/billing-requests"],
+		[PERMISSIONS.configs.list, "/settings"],
+		[PERMISSIONS.aiPricing.list, "/settings?tab=ai"],
 	].find(([permission]) => permission && can(permission));
 	return first?.[1] ? <Navigate to={first[1]} replace /> : <Forbidden />;
 }
@@ -138,11 +141,21 @@ const router = createBrowserRouter([
 					},
 					{
 						path: "configs",
+						element: <Navigate to="/settings?tab=configs" replace />,
+					},
+					{
+						path: "billing-requests",
 						element: (
-							<Allow permission={PERMISSIONS.configs.list}>
-								<ConfigsPage />
+							<Allow permission={PERMISSIONS.billing.requests}>
+								<BillingRequestsPage />
 							</Allow>
 						),
+					},
+					{ path: "settings", element: <SettingsPage /> },
+					// Earlier addresses of the settings sections.
+					{
+						path: "ai-pricing",
+						element: <Navigate to="/settings?tab=ai" replace />,
 					},
 					{ path: "account", element: <AccountPage /> },
 					{ path: "*", element: <NotFound /> },

@@ -1,10 +1,21 @@
-import { BookOpen, ShieldCheck, UserPlus, Users } from "lucide-react";
+import {
+	BookOpen,
+	Cpu,
+	ReceiptText,
+	ShieldCheck,
+	UserPlus,
+	Users,
+	Wallet,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
+import { useGetBillingSummary } from "@/api/generated/endpoints/admin-billing";
 import { useGetStats } from "@/api/generated/endpoints/admin-overview";
+import { LensCoin } from "@/components/ui/lens-coin";
 import { EmptyState, ErrorState, PageHeader } from "@/components/ui/page";
 import { useAuth } from "@/lib/auth";
 import { formatDate, formatNumber } from "@/lib/format";
+import { formatUsd } from "@/lib/money";
 import { PERMISSIONS } from "@/lib/permissions";
 import { bothNames } from "@/lib/translation";
 
@@ -52,6 +63,77 @@ function Stat({
 }
 
 const ICON = { size: 18, strokeWidth: 1.75, "aria-hidden": true } as const;
+
+/** Lens sales and Story Lens Cloud AI cost over the last 30 days. */
+function BillingOverview() {
+	const { can } = useAuth();
+	const { data } = useGetBillingSummary({ days: 30 });
+	const sold = data ? Number(data.requests.approvedUsd) : 0;
+	const cost = data ? Number(data.ai.costWithFeeUsd) : 0;
+	const spentValue =
+		data?.lensPriceUsd != null
+			? data.lenses.spent * Number(data.lensPriceUsd)
+			: null;
+	return (
+		<section aria-labelledby="lenses-heading" className="mt-6">
+			<h2
+				id="lenses-heading"
+				className="mb-3 flex items-center gap-2 text-base font-semibold"
+			>
+				<LensCoin size={20} />
+				<span>Lenses and cloud AI, last 30 days</span>
+			</h2>
+			<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+				<Stat
+					label="Pending requests"
+					value={data?.requests.counts.PENDING}
+					detail={
+						data
+							? `${formatNumber(data.requests.pendingLenses)} lenses · ${formatUsd(data.requests.pendingUsd)}`
+							: undefined
+					}
+					icon={<ReceiptText {...ICON} />}
+					to={
+						can(PERMISSIONS.billing.requests)
+							? "/billing-requests?status=PENDING"
+							: undefined
+					}
+				/>
+				<Stat
+					label="Lenses sold"
+					value={data?.requests.approvedLenses}
+					detail={
+						data
+							? `${formatUsd(String(sold))} from ${formatNumber(data.requests.approvedCount)} approved requests`
+							: undefined
+					}
+					icon={<Wallet {...ICON} />}
+				/>
+				<Stat
+					label="Lenses spent on AI"
+					value={data?.lenses.spent}
+					detail={
+						data
+							? `Worth ${spentValue === null ? "—" : formatUsd(String(spentValue))} · ${formatNumber(data.lenses.trial + data.lenses.gifts)} given free`
+							: undefined
+					}
+					icon={<Cpu {...ICON} />}
+					to={can(PERMISSIONS.aiPricing.list) ? "/ai-pricing" : undefined}
+				/>
+				<Stat
+					label="AI calls"
+					value={data?.ai.calls}
+					detail={
+						data
+							? `Cost ${formatUsd(String(cost), 2)} with the OpenRouter fee${data.ai.dataPolicy.allow ? ` · ${formatNumber(data.ai.dataPolicy.allow)} via providers that may keep data` : ""}`
+							: undefined
+					}
+					icon={<Cpu {...ICON} />}
+				/>
+			</div>
+		</section>
+	);
+}
 
 export function OverviewPage() {
 	const { can } = useAuth();
@@ -117,6 +199,8 @@ export function OverviewPage() {
 							}
 						/>
 					</section>
+
+					{can(PERMISSIONS.billing.summary) && <BillingOverview />}
 
 					<div className="mt-6 grid gap-6 lg:grid-cols-2">
 						<section className="card" aria-labelledby="recent-users">

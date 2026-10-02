@@ -6,6 +6,7 @@ import {
 	Menu,
 	Monitor,
 	Moon,
+	ReceiptText,
 	Settings2,
 	ShieldCheck,
 	Sun,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router";
+import { useGetBillingRequests } from "@/api/generated/endpoints/admin-billing";
 import { useAuth, useCurrentUser } from "@/lib/auth";
 import { initials } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -24,7 +26,8 @@ type NavItem = {
 	to: string;
 	label: string;
 	icon: ReactNode;
-	permission: string;
+	/** Shown when the role holds any of these. */
+	permissions: string[];
 };
 
 const ICON = { size: 18, strokeWidth: 1.75, "aria-hidden": true } as const;
@@ -34,37 +37,43 @@ const NAV: NavItem[] = [
 		to: "/",
 		label: "Overview",
 		icon: <LayoutDashboard {...ICON} />,
-		permission: PERMISSIONS.overview,
+		permissions: [PERMISSIONS.overview],
 	},
 	{
 		to: "/users",
 		label: "Users",
 		icon: <Users {...ICON} />,
-		permission: PERMISSIONS.users.list,
+		permissions: [PERMISSIONS.users.list],
 	},
 	{
 		to: "/roles",
 		label: "Roles",
 		icon: <ShieldCheck {...ICON} />,
-		permission: PERMISSIONS.roles.list,
+		permissions: [PERMISSIONS.roles.list],
 	},
 	{
 		to: "/novels",
 		label: "Novels",
 		icon: <BookOpen {...ICON} />,
-		permission: PERMISSIONS.novels.list,
+		permissions: [PERMISSIONS.novels.list],
 	},
 	{
 		to: "/translations",
 		label: "Match translations",
 		icon: <Languages {...ICON} />,
-		permission: PERMISSIONS.keywords.list,
+		permissions: [PERMISSIONS.keywords.list],
 	},
 	{
-		to: "/configs",
-		label: "Configs",
+		to: "/billing-requests",
+		label: "Billing requests",
+		icon: <ReceiptText {...ICON} />,
+		permissions: [PERMISSIONS.billing.requests],
+	},
+	{
+		to: "/settings",
+		label: "Settings",
 		icon: <Settings2 {...ICON} />,
-		permission: PERMISSIONS.configs.list,
+		permissions: [PERMISSIONS.configs.list, PERMISSIONS.aiPricing.list],
 	},
 ];
 
@@ -135,10 +144,20 @@ function ThemeSwitch() {
 	);
 }
 
+/** Pending lens requests, refreshed every minute, for the sidebar badge. */
+function usePendingRequests(enabled: boolean): number {
+	const { data } = useGetBillingRequests(
+		{ status: "PENDING", pageSize: 1 },
+		{ query: { enabled, refetchInterval: 60_000 } },
+	);
+	return data?.counts.PENDING ?? 0;
+}
+
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 	const { can, signOut } = useAuth();
 	const user = useCurrentUser();
-	const items = NAV.filter((item) => can(item.permission));
+	const items = NAV.filter((item) => item.permissions.some((key) => can(key)));
+	const pending = usePendingRequests(can(PERMISSIONS.billing.requests));
 
 	return (
 		<div className="flex h-full flex-col gap-6 px-4 py-5">
@@ -160,7 +179,13 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 								}
 							>
 								{item.icon}
-								{item.label}
+								<span className="flex-1">{item.label}</span>
+								{item.to === "/billing-requests" && pending > 0 && (
+									<span className="badge badge-accent tabular-nums">
+										<span className="sr-only">Pending: </span>
+										<span>{pending}</span>
+									</span>
+								)}
 							</NavLink>
 						</li>
 					))}

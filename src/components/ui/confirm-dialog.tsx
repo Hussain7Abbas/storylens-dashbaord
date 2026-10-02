@@ -8,6 +8,7 @@ export function ConfirmDialog({
 	title,
 	children,
 	confirmLabel,
+	tone = "danger",
 	busy = false,
 	error,
 	onConfirm,
@@ -17,6 +18,8 @@ export function ConfirmDialog({
 	title: string;
 	children: ReactNode;
 	confirmLabel: string;
+	/** `primary` for confirmations that are not destructive (approving a request). */
+	tone?: "danger" | "primary";
 	busy?: boolean;
 	error?: string;
 	onConfirm: () => void;
@@ -33,7 +36,7 @@ export function ConfirmDialog({
 					<Button onClick={onClose} disabled={busy}>
 						Cancel
 					</Button>
-					<Button variant="danger" loading={busy} onClick={onConfirm}>
+					<Button variant={tone} loading={busy} onClick={onConfirm}>
 						{confirmLabel}
 					</Button>
 				</>

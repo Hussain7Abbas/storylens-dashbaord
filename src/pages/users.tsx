@@ -1,5 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+	Gift,
+	History,
+	LogOut,
+	Pencil,
+	Plus,
+	SlidersHorizontal,
+	Trash2,
+} from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { errorMessage } from "@/api/axios-instance";
 import { useGetRoles } from "@/api/generated/endpoints/admin-roles";
@@ -19,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Dialog } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
+import { LensPrice } from "@/components/ui/lens-coin";
 import {
 	EmptyState,
 	ErrorState,
@@ -28,6 +37,12 @@ import {
 import { Pagination } from "@/components/ui/pagination";
 import { SearchInput } from "@/components/ui/search-input";
 import { useToast } from "@/components/ui/toast";
+import {
+	AdjustLensesForm,
+	GiftLensesForm,
+	LensHistory,
+	type LensUser,
+} from "@/components/users/lens-dialogs";
 import { useAuth, useCurrentUser } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -350,6 +365,10 @@ export function UsersPage() {
 	] as const);
 	const [editing, setEditing] = useState<User | "new" | null>(null);
 	const [pending, setPending] = useState<Pending>(null);
+	const [lensDialog, setLensDialog] = useState<{
+		kind: "gift" | "adjust" | "history";
+		user: LensUser;
+	} | null>(null);
 	const [pendingError, setPendingError] = useState("");
 
 	const params = {
@@ -459,19 +478,20 @@ export function UsersPage() {
 						onRetry={() => void users.refetch()}
 					/>
 				) : !users.data ? (
-					<TableSkeleton columns={5} />
+					<TableSkeleton columns={6} />
 				) : users.data.data.length === 0 ? (
 					<EmptyState title="No users found">
 						Try another search or filter.
 					</EmptyState>
 				) : (
 					<>
-						<div className="overflow-x-auto">
+						<div className="relative overflow-x-auto">
 							<table className="data-table">
 								<thead>
 									<tr>
 										<th scope="col">User</th>
 										<th scope="col">Access</th>
+										<th scope="col">Lenses</th>
 										<th scope="col">Joined</th>
 										<th scope="col">
 											<span className="sr-only">Actions</span>
@@ -509,11 +529,76 @@ export function UsersPage() {
 													)}
 												</ul>
 											</td>
+											<td>
+												{user.isUser && !user.isGuest ? (
+													<LensPrice lenses={user.lensBalance} signed />
+												) : (
+													<span className="text-muted">—</span>
+												)}
+											</td>
 											<td className="whitespace-nowrap text-muted">
 												{formatDate(user.createdAt)}
 											</td>
 											<td>
 												<div className="flex justify-end gap-1">
+													{user.isUser && !user.isGuest && (
+														<>
+															{can(PERMISSIONS.lenses.gift) && (
+																<Button
+																	variant="ghost"
+																	iconOnly
+																	aria-label={`Gift lenses to ${user.username}`}
+																	title="Gift lenses"
+																	onClick={() =>
+																		setLensDialog({ kind: "gift", user })
+																	}
+																	icon={
+																		<Gift
+																			size={16}
+																			strokeWidth={1.75}
+																			aria-hidden
+																		/>
+																	}
+																/>
+															)}
+															{can(PERMISSIONS.lenses.adjust) && (
+																<Button
+																	variant="ghost"
+																	iconOnly
+																	aria-label={`Correct ${user.username}'s lens balance`}
+																	title="Correct balance"
+																	onClick={() =>
+																		setLensDialog({ kind: "adjust", user })
+																	}
+																	icon={
+																		<SlidersHorizontal
+																			size={16}
+																			strokeWidth={1.75}
+																			aria-hidden
+																		/>
+																	}
+																/>
+															)}
+															{can(PERMISSIONS.lenses.history) && (
+																<Button
+																	variant="ghost"
+																	iconOnly
+																	aria-label={`Lens history of ${user.username}`}
+																	title="Lens history"
+																	onClick={() =>
+																		setLensDialog({ kind: "history", user })
+																	}
+																	icon={
+																		<History
+																			size={16}
+																			strokeWidth={1.75}
+																			aria-hidden
+																		/>
+																	}
+																/>
+															)}
+														</>
+													)}
 													{canEdit && (
 														<Button
 															variant="ghost"
@@ -602,6 +687,37 @@ export function UsersPage() {
 						roles={roleList}
 						onDone={() => setEditing(null)}
 					/>
+				)}
+			</Dialog>
+
+			<Dialog
+				open={lensDialog !== null}
+				onClose={() => setLensDialog(null)}
+				size={lensDialog?.kind === "history" ? "lg" : "sm"}
+				title={
+					lensDialog?.kind === "gift"
+						? `Gift lenses to ${lensDialog.user.name}`
+						: lensDialog?.kind === "adjust"
+							? `Correct ${lensDialog.user.name}'s balance`
+							: `Lens history of ${lensDialog?.user.name ?? ""}`
+				}
+			>
+				{lensDialog?.kind === "gift" && (
+					<GiftLensesForm
+						key={lensDialog.user.id}
+						user={lensDialog.user}
+						onDone={() => setLensDialog(null)}
+					/>
+				)}
+				{lensDialog?.kind === "adjust" && (
+					<AdjustLensesForm
+						key={lensDialog.user.id}
+						user={lensDialog.user}
+						onDone={() => setLensDialog(null)}
+					/>
+				)}
+				{lensDialog?.kind === "history" && (
+					<LensHistory user={lensDialog.user} />
 				)}
 			</Dialog>
 

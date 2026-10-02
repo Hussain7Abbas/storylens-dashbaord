@@ -656,7 +656,7 @@ export function MatchTranslationsPage() {
 						</EmptyState>
 					) : (
 						<>
-							<div className="overflow-x-auto">
+							<div className="relative overflow-x-auto">
 								<table className="data-table">
 									<thead>
 										<tr>

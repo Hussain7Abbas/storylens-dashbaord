@@ -280,6 +280,48 @@
 	.data-table tbody tr:hover {
 		background: color-mix(in srgb, var(--wash) 55%, transparent);
 	}
+	/*
+	 * Text-only tables stack into label and value rows on phones, so they never
+	 * scroll sideways (a scroll area with nothing focusable is out of keyboard
+	 * reach). Each cell names its column in `data-label`.
+	 */
+	@media (max-width: 639px) {
+		.data-table-stack thead {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip-path: inset(50%);
+			white-space: nowrap;
+		}
+		.data-table-stack tbody,
+		.data-table-stack tr,
+		.data-table-stack td {
+			display: block;
+		}
+		.data-table-stack tr {
+			padding: 0.5rem 0;
+			border-bottom: 1px solid var(--border);
+		}
+		.data-table-stack tbody tr:last-child {
+			border-bottom: 0;
+		}
+		.data-table-stack td {
+			display: flex;
+			justify-content: space-between;
+			gap: 1rem;
+			padding: 0.3rem 1rem;
+			border-bottom: 0;
+			text-align: end;
+		}
+		.data-table-stack td::before {
+			content: attr(data-label);
+			flex: none;
+			color: var(--muted);
+			font-size: 0.8rem;
+			text-align: start;
+		}
+	}
 
 	.badge {
 		display: inline-flex;

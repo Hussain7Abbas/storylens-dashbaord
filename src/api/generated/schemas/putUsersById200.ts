@@ -23,6 +23,7 @@ export type PutUsersById200 = {
   image: PutUsersById200Image;
   isGuest: boolean;
   isUser: boolean;
+  lensBalance: number;
   /** @nullable */
   userRoleId: PutUsersById200UserRoleId;
   /** @nullable */

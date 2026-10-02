@@ -23,6 +23,7 @@ export type GetUsers200DataItem = {
   image: GetUsers200DataItemImage;
   isGuest: boolean;
   isUser: boolean;
+  lensBalance: number;
   /** @nullable */
   userRoleId: GetUsers200DataItemUserRoleId;
   /** @nullable */
